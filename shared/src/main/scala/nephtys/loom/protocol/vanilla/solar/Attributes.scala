@@ -3,9 +3,12 @@ package nephtys.loom.protocol.vanilla.solar
 import nephtys.loom.protocol.vanilla.solar.Attributes.types.{Archetype, Nature}
 import nephtys.loom.protocol.vanilla.solar.Misc.Dots
 
+import scala.scalajs.js.annotation.JSExportAll
+
 /**
   * Created by nephtys on 12/7/16.
   */
+@JSExportAll
 object Attributes {
   final case class AttributeRating(attribute: Attribute, dots: Dots) {
     assert(dots.number >= 1)

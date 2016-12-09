@@ -3,9 +3,13 @@ import nephtys.loom.protocol.vanilla.solar.Misc._
 import org.nephtys.loom.generic.protocol.Aggregate
 import org.nephtys.loom.generic.protocol.InternalStructures.{Email, ID, IDable}
 
+import scala.scalajs.js.annotation.{JSExport, JSExportAll}
+
 /**
   * Created by nephtys on 12/7/16.
   */
+@JSExport
+@JSExportAll
 final case class Solar(
                       owner : Email,
                       id : ID[Solar],

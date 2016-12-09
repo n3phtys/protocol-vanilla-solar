@@ -2,9 +2,12 @@ package nephtys.loom.protocol.vanilla.solar
 
 import nephtys.loom.protocol.vanilla.solar.Misc._
 
+import scala.scalajs.js.annotation.JSExportAll
+
 /**
   * Created by nephtys on 12/7/16.
   */
+@JSExportAll
 object Abilities {
 
   sealed trait AbilityLike {

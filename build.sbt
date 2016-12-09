@@ -1,4 +1,5 @@
 import sbt.Keys._
+import sbt.ProjectRef
 
 name := "protocol-vanilla-solar"
 
@@ -6,14 +7,19 @@ scalaVersion in ThisBuild := "2.11.8"
 
 
 
+val genericFrontendUrl = "https://github.com/n3phtys/cqrs-client-frame.git"
+
 
 val genericProtocolurl =  "https://github.com/n3phtys/cqrs-dual-frame.git"
+lazy val genericFrontendProject = RootProject(uri(genericFrontendUrl))
 
 
-lazy val genericProtocolProject = RootProject(uri(genericProtocolurl))
+
+lazy val genericProtocolProjectJS = ProjectRef(uri(genericProtocolurl), "cqrsdualframeJS")
+lazy val genericProtocolProjectJVM = ProjectRef(uri(genericProtocolurl), "cqrsdualframeJVM")
 
 lazy val root = project.in(file(".")).
-  dependsOn(genericProtocolProject).
+  dependsOn(genericProtocolProjectJS, genericProtocolProjectJVM, genericProtocolProjectJS).
   aggregate(solarprotocolJS, solarprotocolJVM).
   settings(
     publish := {},
@@ -44,5 +50,5 @@ lazy val solarprotocol = crossProject.in(file(".")).
     // Add JS-specific settings here
   )
 
-lazy val solarprotocolJVM = solarprotocol.jvm.dependsOn(genericProtocolProject)
-lazy val solarprotocolJS = solarprotocol.js.dependsOn(genericProtocolProject)
+lazy val solarprotocolJVM = solarprotocol.jvm.dependsOn(genericProtocolProjectJVM)
+lazy val solarprotocolJS = solarprotocol.js.dependsOn(genericProtocolProjectJS, genericProtocolProjectJS)

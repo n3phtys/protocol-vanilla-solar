@@ -1,8 +1,11 @@
 package nephtys.loom.protocol.vanilla.solar
 
+import scala.scalajs.js.annotation.JSExportAll
+
 /**
   * Created by nephtys on 12/7/16.
   */
+@JSExportAll
 object Misc {
   final case class Name(name : String) extends AnyVal
   final case class Player(player : String) extends AnyVal
