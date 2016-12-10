@@ -7,6 +7,7 @@ import org.nephtys.loom.generic.protocol.Aggregate
 import org.nephtys.loom.generic.protocol.InternalStructures.{Email, ID, IDable}
 
 import scala.scalajs.js.annotation.{JSExport, JSExportAll}
+import scala.util.Try
 
 /**
   * Created by nephtys on 12/7/16.
@@ -50,5 +51,9 @@ final case class Solar(
   def essence : Essence = {
     Experiences.spentXPtoEssenceLevel(experience.generalXP.spent)
   }
+
+
+  //list all commands that need to be executed to translate this solar aggregate instance the other aggregate, or failed if impossible
+  def diff(other: Solar) : Try[Seq[SolarProtocol.Command]] = ???
 
 }
