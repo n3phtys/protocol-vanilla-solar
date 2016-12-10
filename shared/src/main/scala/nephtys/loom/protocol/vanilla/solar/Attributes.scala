@@ -1,6 +1,6 @@
 package nephtys.loom.protocol.vanilla.solar
 
-import nephtys.loom.protocol.vanilla.solar.Attributes.types.{Archetype, Nature}
+import nephtys.loom.protocol.vanilla.solar.Attributes.types._
 import nephtys.loom.protocol.vanilla.solar.Misc.Dots
 
 import scala.scalajs.js.annotation.JSExportAll
@@ -19,6 +19,9 @@ object Attributes {
     assert(block.size == Attributes.size)
     assert(block.zipWithIndex.forall(a => a._1.attribute == Attributes(a._2)))
 
+    def mentals : IndexedSeq[AttributeRating] = block.filter(_.attribute.nature == Mental)
+    def socials : IndexedSeq[AttributeRating] = block.filter(_.attribute.nature == Social)
+    def physicals : IndexedSeq[AttributeRating] = block.filter(_.attribute.nature == Physical)
   }
   def emptyAttributeBlock : AttributeBlock = AttributeBlock(Attributes.map(c => AttributeRating(c, Dots(1))))
 

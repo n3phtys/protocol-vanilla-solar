@@ -49,6 +49,13 @@ object Abilities {
     override def isCaste(caste: Caste): Boolean = preprogrammed.casteAbility(caste).contains(Ability(familityName))
   }
 
+  def emptyMatrix : AbilityMatrix = {
+    val ab : Set[AbilityLike] = preprogrammed.list
+    val dots : Map[Ability, Dots] = ab.flatMap(_.abilities).map(a => (a, Dots(0))).toMap
+    val types : Map[Typeable, Type] = ab.filter(_.isInstanceOf[Typeable]).map(_.asInstanceOf[Typeable]).map(t => (t, Normal)).toMap
+    val specialties : Map[SpecialtyAble, Set[Specialty]] = Map.empty
+    AbilityMatrix(ab, dots, types, specialties)
+  }
 
   object preprogrammed {
     val Archery = "Archery"
