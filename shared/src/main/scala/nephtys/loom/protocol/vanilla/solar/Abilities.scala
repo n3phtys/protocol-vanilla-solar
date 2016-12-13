@@ -86,10 +86,13 @@ object Abilities {
   }
 
   object preprogrammed {
-    def isCasteAbility(caste: Option[Caste], title: String) : Boolean = title match {
-      case CraftsLabel => caste.contains(Twilight)
-      case BrawlMartialArtsComboLabel => caste.contains(Dawn)
-      case s : String => caste.isDefined && casteAbility(caste.get).exists(_.name == s)
+    def isCasteAbility(caste: Option[Caste], title: String) : Boolean = {
+      //println(s"comparing title \n$title as caste ability against \n$BrawlMartialArtsComboLabel")
+      title match {
+        case CraftsLabel => caste.contains(Twilight)
+        case BrawlMartialArtsComboLabel => caste.contains(Dawn)
+        case s : String => caste.isDefined && casteAbility(caste.get).exists(_.name == s)
+      }
     }
 
     val Archery = "Archery"
