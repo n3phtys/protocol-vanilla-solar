@@ -22,6 +22,7 @@ object Misc {
 
   sealed trait Caste
   val Castes = IndexedSeq(Dawn, Zenith, Twilight, Night, Eclipse)
+  val StrToCaste : Map[String, Caste] = Castes.map(a => (a.toString, a)).toMap
   case object Dawn extends Caste
   case object Zenith extends Caste
   case object Twilight extends Caste
