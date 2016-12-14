@@ -13,7 +13,7 @@ import scala.scalajs.js.annotation.JSExportAll
 object Characters {
 
   def emptySolar(id : ID[Solar], owner : Email) : Solar = Solar(
-    owner, readers = Set.empty, id, stillInCharGen = true, 15, Name(""), Concept(""), Player(""),Anima(""),
+    owner, readers = Set.empty, public = false, id, stillInCharGen = true, 15, Name(""), Concept(""), Player(""),Anima(""),
     caste = None,
      attributes = Attributes.emptyAttributeBlock,
     abilities = Abilities.emptyMatrix, Merits.emptyMeritsList,

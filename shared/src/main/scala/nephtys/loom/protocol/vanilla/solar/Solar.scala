@@ -17,6 +17,7 @@ import scala.util.Try
 final case class Solar(
                       owner : Email, //TODO: needs command/event
                       readers : Set[Email], //TODO: needs command/event
+                      public : Boolean,
                       id : ID[Solar],
                       stillInCharGen  : Boolean,
                       bonusPointsUnspent : Int, //TODO: needs command/event
