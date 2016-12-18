@@ -1,8 +1,9 @@
 package nephtys.loom.protocol.vanilla.solar
 
 import nephtys.loom.protocol.shared.CharmRef
-import org.nephtys.loom.generic.protocol.InternalStructures.{Email, EndpointRoot, ID}
-import org.nephtys.loom.generic.protocol.Protocol
+import org.nephtys.loom.generic.protocol.InternalStructures.{Email, EndpointRoot, FailableList, ID}
+import org.nephtys.loom.generic.protocol.{Backend, Protocol}
+import upickle.default._
 
 import scala.scalajs.js.annotation.JSExportAll
 import scala.util.{Failure, Success, Try}
@@ -11,9 +12,9 @@ import scala.util.{Failure, Success, Try}
   * Created by nephtys on 12/7/16.
   */
 @JSExportAll
-object SolarProtocol extends Protocol[Solar]{
+object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   type Id = ID[Solar]
-  override val endpointRoot: EndpointRoot = EndpointRoot("vanilla_solar")
+  override val endpointRoot: EndpointRoot = EndpointRoot("vanillasolar")
 
   sealed trait SolarCommand extends Command {
     def internalSolarValidate(aggregate: _root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Aggregates) : Try[SolarEvent] = validateInternal(aggregate).map(e => e.asInstanceOf[SolarEvent])
@@ -102,4 +103,15 @@ object SolarProtocol extends Protocol[Solar]{
       aggregate + ((id, oldchar.copy(notes = newlist)))
     }
   }
+
+
+
+
+
+
+  override def readCommands(json: String): Seq[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Command] = read[Seq[SolarCommand]](json)
+
+  override def writeAggregates(aggregates: Seq[Solar]): String = write(aggregates)
+
+  override def writeFailableList(failableList: FailableList[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event]): String = write(failableList.asInstanceOf[FailableList[SolarEvent]])
 }
