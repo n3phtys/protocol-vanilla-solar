@@ -14,22 +14,29 @@ object Abilities {
     def abilities : Set[Ability]
     def isCaste(caste: Caste) : Boolean
   }
-  sealed trait SpecialtyAble
+  sealed trait SpecialtyAble {
+    def name : String
+  }
+
+  sealed trait AbilityLikeSpecialtyAble extends AbilityLike with SpecialtyAble
+
   sealed trait Typeable {
     def typeabletitle : String
   }
 
   final case class Ability(name : String)
 
-  final case class SingleAbility(ability : Ability) extends AbilityLike with SpecialtyAble with Typeable {
+  final case class SingleAbility(ability : Ability) extends AbilityLikeSpecialtyAble with Typeable {
     override def abilities: Set[Ability] = Set(ability)
+
+    override def name: String = ability.name
 
     override def isCaste(caste: Caste): Boolean = preprogrammed.casteAbility(caste).contains(ability)
 
     override def typeabletitle: String = ability.name
   }
   final case class Specialty(name : String) extends AnyVal
-  final case class AbilityMatrix(abilities : Set[AbilityLike], ratings : Map[Ability, Dots], types : Map[Typeable, Type], specialties : Map[SpecialtyAble, Set[Specialty]]) {
+  final case class AbilityMatrix(abilities : Set[AbilityLikeSpecialtyAble], ratings : Map[Ability, Dots], types : Map[Typeable, Type], specialties : Map[SpecialtyAble, Set[Specialty]]) {
     def buildTypeableTree : Map[String, (Map[String, Int], Boolean, Abilities.Type)] = {
         val t : Set[(String, Boolean, Map[String, Int], Abilities.Type)] = abilities.map {
           case s: SingleAbility => {
@@ -47,6 +54,9 @@ object Abilities {
         }
       t.map(k => (k._1, (k._3, k._2, k._4))).toMap
     }
+
+    def specialtyAbles : Seq[String] = abilities.map(_.name).toSeq.sorted
+
     def typeables : Set[String] = abilities.filter(_.isInstanceOf[Typeable]).map(_.asInstanceOf[Typeable].typeabletitle)
   }
 
@@ -62,23 +72,27 @@ object Abilities {
   //and Brawl / Martial Arts split
   //a sealed trait hierarchy of the possible concepts
 
-  final case class DuoAbilityGroup(abilityA : Ability, abilityB : Ability, title : String) extends AbilityLike with SpecialtyAble with Typeable {
+  final case class DuoAbilityGroup(abilityA : Ability, abilityB : Ability, title : String) extends AbilityLikeSpecialtyAble with Typeable {
     override def abilities: Set[Ability] = Set(abilityA, abilityB)
 
     override def isCaste(caste: Caste): Boolean = preprogrammed.casteAbility(caste).contains(abilityA) || preprogrammed.casteAbility(caste).contains(abilityA)
 
     override def typeabletitle: String = title
+
+    override def name: String = title
   }
-  final case class AbilityFamily(instances : Set[Ability], familityName : String) extends AbilityLike with SpecialtyAble with Typeable{
+  final case class AbilityFamily(instances : Set[Ability], familityName : String) extends AbilityLikeSpecialtyAble with Typeable{
     override def abilities: Set[Ability] = instances
 
     override def isCaste(caste: Caste): Boolean = preprogrammed.casteAbility(caste).contains(Ability(familityName))
 
     override def typeabletitle: String = familityName
+
+    override def name: String = familityName
   }
 
   def emptyMatrix : AbilityMatrix = {
-    val ab : Set[AbilityLike] = preprogrammed.list
+    val ab : Set[AbilityLikeSpecialtyAble] = preprogrammed.list
     val dots : Map[Ability, Dots] = ab.flatMap(_.abilities).map(a => (a, Dots(0))).toMap
     val types : Map[Typeable, Type] = ab.filter(_.isInstanceOf[Typeable]).map(_.asInstanceOf[Typeable]).map(t => (t, Normal)).toMap
     val specialties : Map[SpecialtyAble, Set[Specialty]] = Map.empty
@@ -134,9 +148,9 @@ object Abilities {
       val r : Set[Ability] = str.map(s => Ability(s))
       r
     }
-    private def singles : Set[AbilityLike] = singlesAb.map(s => SingleAbility(s))
+    private def singles : Set[AbilityLikeSpecialtyAble] = singlesAb.map(s => SingleAbility(s))
 
-    def list : Set[AbilityLike] = singles + DuoAbilityGroup(Ability(Brawl), Ability(MartialArts), BrawlMartialArtsComboLabel) + AbilityFamily(Set(Ability(Craft + " Weaponsmithing")), CraftsLabel)
+    def list : Set[AbilityLikeSpecialtyAble] = singles + DuoAbilityGroup(Ability(Brawl), Ability(MartialArts), BrawlMartialArtsComboLabel) + AbilityFamily(Set(Ability(Craft + " Weaponsmithing")), CraftsLabel)
 
     def casteAbility(caste : Caste) : Set[Ability] = (caste match {
       case Dawn => Set(Archery, Awareness, Brawl, MartialArts, Dodge, Melee, Resistance, Thrown, War)

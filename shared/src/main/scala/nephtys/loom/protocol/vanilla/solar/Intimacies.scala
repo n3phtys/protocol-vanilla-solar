@@ -5,6 +5,8 @@ package nephtys.loom.protocol.vanilla.solar
   */
 object Intimacies {
 
+  val values = Seq(Defining, Major, Minor)
+
   sealed trait Intensity {
     val modifier : Int
   }
