@@ -22,17 +22,17 @@ final case class Solar(
                       stillInCharGen  : Boolean,
                       bonusPointsUnspent : Int, //TODO: needs command/event
 
-                      name : Name,
-                      concept : Concept, //TODO: needs command/event
-                      player : Player, //TODO: needs command/event
-                      anima : Anima, //TODO: needs command/event
+                      name : String,
+                      concept : String, //TODO: needs command/event
+                      player : String, //TODO: needs command/event
+                      anima : String, //TODO: needs command/event
                       caste : Option[Caste], //TODO: needs command/event
 
                       attributes : Attributes.AttributeBlock, //TODO: needs command/event
                       abilities : Abilities.AbilityMatrix, //TODO: needs command/event
                       merits : List[Merit], //TODO: needs command/event
 
-                      willpower : WillpowerDots,  //TODO: needs command/event
+                      willpowerDots : Int,  //TODO: needs command/event
                       essenceCommitted : Int,  //TODO: needs command/event
                       limitTrigger: LimitTrigger,  //TODO: needs command/event
 

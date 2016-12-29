@@ -7,17 +7,17 @@ import scala.scalajs.js.annotation.JSExportAll
   */
 @JSExportAll
 object Misc {
-  final case class Name(name : String) extends AnyVal
+  /*final case class Name(name : String) extends AnyVal
   final case class Player(player : String) extends AnyVal
   final case class Concept(concept : String) extends AnyVal
-  final case class Anima(anima : String) extends AnyVal
+  final case class Anima(anima : String) extends AnyVal*/
 
   final case class Dots(number : Byte) extends AnyVal
   final case class LimitTrigger(trigger : String) extends AnyVal
 
   final case class Essence(rating : Byte) extends AnyVal
   final case class WillpowerPoints(points : Byte) extends AnyVal
-  final case class WillpowerDots(points : Byte) extends AnyVal
+  //final case class WillpowerDots(points : Byte) extends AnyVal
 
 
   sealed trait Caste
