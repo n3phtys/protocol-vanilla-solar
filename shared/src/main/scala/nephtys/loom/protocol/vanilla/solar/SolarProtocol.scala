@@ -47,10 +47,18 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
 
 
   case class SetName(id : Id, name : String) extends SolarCommand {
-    override protected def validateInternal(aggregate: _root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Aggregates): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+    override protected def validateInternal(aggregate: _root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Aggregates): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
+      if (aggregate.contains(id)) {
+        Success(NameChanged(id, name))
+      } else {
+        Failure(new Exception("Aggregate ID not found"))
+      }
+    }
   }
   case class NameChanged(id : Id, name : String) extends SolarEvent {
-    override def commit(aggregate: _root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Aggregates): _root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Aggregates = ???
+    override def commit(aggregate: _root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Aggregates): _root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Aggregates = {
+      aggregate.+((id, aggregate(id).copy(name = name)))
+    }
   }
 
   case class LeaveCharacterGeneration(id : Id) extends SolarCommand {
