@@ -36,6 +36,7 @@ object Experiences {
     def solarXP : ExperienceCategory = categories(SolarXP)
     def specialXP: Option[ExperienceCategory] = categories.get(SpecialXP)
 
+    def formattedLeft : Seq[(ExperienceType, Int)] = (if(generalXP.current > 0) {Seq(GeneralXP -> generalXP.current)} else {Seq.empty}) ++ (if(generalXP.current > 0) {Seq(SolarXP -> solarXP.current)} else {Seq.empty}) ++ specialXP.filter(_.current > 0).map(i => Seq(SpecialXP -> i.current)).getOrElse(Seq.empty)
 
     def essenceRating : Int = Experiences.spentXPtoEssenceLevel(generalXP.spent).rating.toInt
 

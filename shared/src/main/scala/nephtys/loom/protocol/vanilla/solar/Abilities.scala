@@ -54,6 +54,14 @@ object Abilities {
         }
       t.map(k => (k._1, (k._3, k._2, k._4))).toMap
     }
+    //TODO: brawl and martial arts can never be supernal at the same time
+
+    def spentWithFreePoints : Int = {
+      //TODO: sum number of points 1-3
+      //TODO: return min with 28
+      Math.min(28, ratings.values.map(i => Math.min(i.number, 3)).sum)
+    }
+
 
     def specialtyAbles : Seq[String] = abilities.map(_.name).toSeq.sorted
 
