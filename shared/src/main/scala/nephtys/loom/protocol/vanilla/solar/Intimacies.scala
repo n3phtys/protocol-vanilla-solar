@@ -7,6 +7,15 @@ object Intimacies {
 
   val values = Seq(Defining, Major, Minor)
 
+  private val definingstring : String = Defining.toString
+  private val majorstring : String = Major.toString
+
+  def parse(s : String) : Intensity = s match {
+    case `definingstring` => Defining
+    case `majorstring` => Major
+    case _ => Minor
+  }
+
   sealed trait Intensity {
     val modifier : Int
   }

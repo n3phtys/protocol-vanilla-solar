@@ -68,6 +68,10 @@ object Abilities {
     def typeables : Set[String] = abilities.filter(_.isInstanceOf[Typeable]).map(_.asInstanceOf[Typeable].typeabletitle)
   }
 
+  private val inverseSpecialtyMap : Map[String, SpecialtyAble] = emptyMatrix.abilities.map(s => (s.toString, s)).toMap
+  private val defaultSpecialty : SpecialtyAble = emptyMatrix.abilities.head
+  def specialtyAble(from : String) : SpecialtyAble = inverseSpecialtyMap.getOrElse(from, defaultSpecialty)
+
   sealed trait Type
   case object Normal extends Type
   case object Caste extends Type

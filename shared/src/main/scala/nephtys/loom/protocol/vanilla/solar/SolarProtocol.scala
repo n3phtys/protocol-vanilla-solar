@@ -1,6 +1,8 @@
 package nephtys.loom.protocol.vanilla.solar
 
 import nephtys.loom.protocol.shared.CharmRef
+import nephtys.loom.protocol.vanilla.solar.Abilities.SpecialtyAble
+import nephtys.loom.protocol.vanilla.solar.Misc.Caste
 import org.nephtys.loom.generic.protocol.InternalStructures.{Email, EndpointRoot, FailableList, ID}
 import org.nephtys.loom.generic.protocol.{Backend, Protocol}
 import upickle.default._
@@ -61,6 +63,30 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
     }
   }
 
+  case class SetWillpower(id : Id, dots : Int) extends SolarCommand {
+    override protected def validateInternal(aggregate: _root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Aggregates): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+  }
+
+  case class SetCaste(id : Id, caste : Caste) extends SolarCommand {
+    override protected def validateInternal(aggregate: _root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Aggregates): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+  }
+
+  case class SetAnima(id : Id, anima : String) extends SolarCommand {
+    override protected def validateInternal(aggregate: _root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Aggregates): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+  }
+
+  case class SetConcept(id : Id, concept : String) extends SolarCommand {
+    override protected def validateInternal(aggregate: _root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Aggregates): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+  }
+
+  case class SetLimitTrigger(id : Id, limitTrigger : String) extends SolarCommand {
+    override protected def validateInternal(aggregate: _root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Aggregates): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+  }
+
+  case class SetPlayer(id : Id, player : String) extends SolarCommand {
+    override protected def validateInternal(aggregate: _root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Aggregates): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+  }
+
   case class LeaveCharacterGeneration(id : Id) extends SolarCommand {
     override protected def validateInternal(aggregate: _root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Aggregates): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
   }
@@ -69,12 +95,43 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
     override def commit(aggregate: _root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Aggregates): _root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Aggregates = ???
   }
 
-  case class PurchaseCharm(id : Id, charm : CharmRef) extends SolarCommand {
+  case class PurchaseCustomCharm(id : Id) extends SolarCommand {
+    //TODO: needs parameters and all
     override protected def validateInternal(aggregate: _root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Aggregates): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
   }
 
-  case class CharmPurchased(id : Id, charm : CharmRef) extends SolarEvent {
+  case class PurchaseListCharm(id : Id, charm : CharmRef) extends SolarCommand {
+    override protected def validateInternal(aggregate: _root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Aggregates): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+  }
+
+  case class ListCharmPurchased(id : Id, charm : CharmRef) extends SolarEvent {
     override def commit(aggregate: _root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Aggregates): _root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Aggregates = ???
+  }
+
+
+  case class SetOwner(id : Id, owner : Email) extends SolarCommand {
+    override protected def validateInternal(aggregate: _root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Aggregates): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+  }
+
+  case class SetReaders(id : Id, readers : Set[Email]) extends SolarCommand {
+    override protected def validateInternal(aggregate: _root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Aggregates): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+  }
+
+  case class SetPublic(id : Id, public : Boolean) extends SolarCommand {
+    override protected def validateInternal(aggregate: _root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Aggregates): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+  }
+
+  case class AddSpecialty(id : Id, specialtyAble: SpecialtyAble, title : String) extends SolarCommand {
+    override protected def validateInternal(aggregate: _root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Aggregates): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+  }
+
+  case class RemoveSpecialty(id : Id, specialtyAble: SpecialtyAble, title : String) extends SolarCommand {
+    override protected def validateInternal(aggregate: _root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Aggregates): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+  }
+
+  //includes delete
+  case class SetIntimacy(id : Id, title : String, intensity : Option[Intimacies.Intensity]) extends SolarCommand {
+    override protected def validateInternal(aggregate: _root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Aggregates): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
   }
 
   case class AddNote(id : Id, str : String, index : Int ) extends SolarCommand {
@@ -113,8 +170,12 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
 
+  //does not deal with specialties
+  def diff(a : Abilities.AbilityMatrix, b : Abilities.AbilityMatrix) : Seq[SolarCommand] = ???
 
+  def diff(a : Attributes.AttributeBlock, b : Attributes.AttributeBlock) : Seq[SolarCommand] = ???
 
+  def diff(a : Experiences.ExperienceBox, b : Experiences.ExperienceBox) : Seq[SolarCommand] = ???
 
 
   override def readCommands(json: String): Seq[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Command] = read[Seq[SolarCommand]](json)
