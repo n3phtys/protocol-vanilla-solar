@@ -3,7 +3,8 @@ package nephtys.loom.protocol.vanilla.solar
 import nephtys.loom.protocol.shared.CharmRef
 import nephtys.loom.protocol.vanilla.solar.Abilities.SpecialtyAble
 import nephtys.loom.protocol.vanilla.solar.Intimacies.Intensity
-import nephtys.loom.protocol.vanilla.solar.Misc.Caste
+import nephtys.loom.protocol.vanilla.solar.Merits.Category
+import nephtys.loom.protocol.vanilla.solar.Misc.{Caste, Dots}
 import org.nephtys.loom.generic.protocol.EventInput.{EventInput, Update}
 import org.nephtys.loom.generic.protocol.InternalStructures.{Email, EndpointRoot, FailableList, ID}
 import org.nephtys.loom.generic.protocol.{Backend, Protocol}
@@ -176,6 +177,18 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
         s.copy(intimacies = s.intimacies.-(title))
       }
     }
+  }
+
+  case class AddMerit(id : Id, title : String, category : String) extends SolarCommand {
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = Success(MeritAdded(id, title, category))
+  }
+
+  case class MeritAdded(id : Id, title : String, category: String) extends SolarEvent {
+    override def commitInternal(old: EventInput): Solar = old.get[Solar].copy(merits = old.get[Solar].merits.:+(Merits.Merit(title, Dots(0), Merits.parseCategory(category))))
+  }
+
+  case class ChangeMerit(id : Id, index : Int, newrating : Option[Int]) extends SolarCommand {
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
   }
 
   case class AddNote(id : Id, str : String, index : Int ) extends SolarCommand {
