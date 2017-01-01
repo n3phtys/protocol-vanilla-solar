@@ -17,7 +17,7 @@ object Characters {
     caste = None,
      attributes = Attributes.emptyAttributeBlock,
     abilities = Abilities.emptyMatrix, Merits.emptyMeritsList,
-    willpowerDots = (5), essenceCommitted =  0, limitTrigger = LimitTrigger(""),
+    willpowerDots = (5), essenceCommitted =  0, limitTrigger = "",
     experience = Experiences.emptyBox,
     equipment = Equipments.emptyEquipmentList, intimacies = Map.empty[String, Intimacies.Intensity],
     charms = List.empty[CharmRef], notes =  List.empty[String]

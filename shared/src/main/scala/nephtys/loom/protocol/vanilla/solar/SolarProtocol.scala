@@ -56,10 +56,16 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
 
 
   case class SetName(id : Id, name : String) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = Success(NameChanged(id, name))
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
+      println("Checking SetName Command internally")
+      Success(NameChanged(id, name))
+    }
   }
   case class NameChanged(id : Id, name : String) extends SolarEvent {
-    override def commitInternal(old: EventInput): Solar = old.asInstanceOf[Update[Solar]].t.copy(name = name)
+    override def commitInternal(old: EventInput): Solar = {
+      println("Commiting SetName Event internally")
+      old.get[Solar].copy(name = name)
+    }
   }
 
   case class SetWillpower(id : Id, dots : Int) extends SolarCommand {
@@ -67,23 +73,43 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class SetCaste(id : Id, caste : Caste) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = if(input.get[Solar].stillInCharGen) Success(CasteChanged(id, caste)) else Failure(new Exception("Caste can only be changed during CharGen"))
+  }
+
+  case class CasteChanged(id : Id, caste : Caste) extends SolarEvent {
+    override def commitInternal(old: EventInput): Solar = old.get[Solar].copy(caste = Some(caste))
   }
 
   case class SetAnima(id : Id, anima : String) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = Success(AnimaChanged(id, anima))
+  }
+
+  case class AnimaChanged(id : Id, anima : String) extends SolarEvent {
+    override def commitInternal(old: EventInput): Solar = old.get[Solar].copy(anima = anima)
   }
 
   case class SetConcept(id : Id, concept : String) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = Success(ConceptChanged(id, concept))
+  }
+
+  case class ConceptChanged(id : Id, concept : String) extends SolarEvent {
+    override def commitInternal(old: EventInput): Solar = old.get[Solar].copy(concept = concept)
   }
 
   case class SetLimitTrigger(id : Id, limitTrigger : String) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = Success(LimitTriggerChanged(id, limitTrigger))
+  }
+
+  case class LimitTriggerChanged(id : Id, limitTrigger : String) extends SolarEvent {
+    override def commitInternal(old: EventInput): Solar = old.get[Solar].copy(limitTrigger = limitTrigger)
   }
 
   case class SetPlayer(id : Id, player : String) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = Success(PlayerChanged(id, player))
+  }
+
+  case class PlayerChanged(id : Id, player : String) extends SolarEvent {
+    override def commitInternal(old: EventInput): Solar = old.get[Solar].copy(player = player)
   }
 
   case class LeaveCharacterGeneration(id : Id) extends SolarCommand {

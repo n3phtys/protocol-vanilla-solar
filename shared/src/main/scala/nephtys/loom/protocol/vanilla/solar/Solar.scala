@@ -34,7 +34,7 @@ final case class Solar(
 
                       willpowerDots : Int,  //TODO: needs command/event
                       essenceCommitted : Int,  //TODO: needs command/event
-                      limitTrigger: LimitTrigger,  //TODO: needs command/event
+                      limitTrigger: String,  //TODO: needs command/event
 
                       experience : Experiences.ExperienceBox, //TODO: needs command/event
 
