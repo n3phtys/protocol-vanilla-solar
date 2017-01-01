@@ -2,6 +2,7 @@ package nephtys.loom.protocol.vanilla.solar
 
 import nephtys.loom.protocol.shared.CharmRef
 import nephtys.loom.protocol.vanilla.solar.Abilities.SpecialtyAble
+import nephtys.loom.protocol.vanilla.solar.Intimacies.Intensity
 import nephtys.loom.protocol.vanilla.solar.Misc.Caste
 import org.nephtys.loom.generic.protocol.EventInput.{EventInput, Update}
 import org.nephtys.loom.generic.protocol.InternalStructures.{Email, EndpointRoot, FailableList, ID}
@@ -113,11 +114,11 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class LeaveCharacterGeneration(id : Id) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = Success(CharacterGenerationLeft(id))
   }
 
   case class CharacterGenerationLeft(id : Id) extends SolarEvent {
-    override def commitInternal(old: EventInput): Solar = ???
+    override def commitInternal(old: EventInput): Solar = old.get[Solar].copy(stillInCharGen = false)
   }
 
   case class PurchaseCustomCharm(id : Id) extends SolarCommand {
@@ -130,15 +131,27 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class SetOwner(id : Id, owner : Email) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = Success(OwnerChanged(id, owner))
+  }
+
+  case class OwnerChanged(id : Id, owner : Email) extends SolarEvent {
+    override def commitInternal(old: EventInput): Solar = old.get[Solar].copy(owner = owner)
   }
 
   case class SetReaders(id : Id, readers : Set[Email]) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = Success(ReadersChanged(id, readers))
+  }
+
+  case class ReadersChanged(id : Id, readers : Set[Email]) extends SolarEvent {
+    override def commitInternal(old: EventInput): Solar = old.get[Solar].copy(readers = readers)
   }
 
   case class SetPublic(id : Id, public : Boolean) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = Success(MadePublic(id, public))
+  }
+
+  case class MadePublic(id : Id, public : Boolean) extends SolarEvent {
+    override def commitInternal(old: EventInput): Solar = old.get[Solar].copy(public = public)
   }
 
   case class AddSpecialty(id : Id, specialtyAble: SpecialtyAble, title : String) extends SolarCommand {
@@ -151,7 +164,18 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
 
   //includes delete
   case class SetIntimacy(id : Id, title : String, intensity : Option[Intimacies.Intensity]) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = Success(IntimacyChanged(id, title, intensity))
+  }
+
+  case class IntimacyChanged(id : Id, title : String, intensity: Option[Intensity]) extends SolarEvent {
+    override def commitInternal(old: EventInput): Solar = {
+      val s = old.get[Solar]
+      if (intensity.isDefined) {
+        s.copy(intimacies = s.intimacies.+((title, intensity.get)))
+      } else {
+        s.copy(intimacies = s.intimacies.-(title))
+      }
+    }
   }
 
   case class AddNote(id : Id, str : String, index : Int ) extends SolarCommand {
