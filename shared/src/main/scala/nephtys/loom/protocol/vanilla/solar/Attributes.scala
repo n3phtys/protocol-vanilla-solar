@@ -16,6 +16,8 @@ object Attributes {
   }
 
   final case class AttributeBlock(block : IndexedSeq[AttributeRating]) {
+    //TODO: Introduce information about primary/secondary/terniary via indices
+
     assert(block.size == Attributes.size)
     assert(block.zipWithIndex.forall(a => a._1.attribute == Attributes(a._2)))
 

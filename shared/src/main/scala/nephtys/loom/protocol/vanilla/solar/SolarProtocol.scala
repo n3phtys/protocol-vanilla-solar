@@ -320,6 +320,9 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
 
   case class SetAttribute(id : Id, attributeIndex : Int, rating : Int) extends SolarCommand {
     override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
+      //are rating and attribute in range?
+
+      //do we have either 8/6/4 free points above 1 or 4 bonus points per dif dots or (current rating x4 XP)
       ???
     }
   }
