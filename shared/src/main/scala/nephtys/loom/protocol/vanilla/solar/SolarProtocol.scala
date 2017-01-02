@@ -2,6 +2,7 @@ package nephtys.loom.protocol.vanilla.solar
 
 import nephtys.loom.protocol.shared.CharmRef
 import nephtys.loom.protocol.vanilla.solar.Abilities.SpecialtyAble
+import nephtys.loom.protocol.vanilla.solar.Attributes.{AttributeBlock, AttributeRating}
 import nephtys.loom.protocol.vanilla.solar.Intimacies.Intensity
 import nephtys.loom.protocol.vanilla.solar.Merits.{Category, Merit}
 import nephtys.loom.protocol.vanilla.solar.Misc.{Caste, Dots}
@@ -320,15 +321,61 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
 
   case class SetAttribute(id : Id, attributeIndex : Int, rating : Int) extends SolarCommand {
     override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
+      val solar : Solar = input.get[Solar]
       //are rating and attribute in range?
+      if (attributeIndex < 0 || attributeIndex >= 9 || rating < 1 || rating > 5) {
+        Failure(new IllegalArgumentException)
+      } else if (solar.stillInCharGen) {
+        //do we have either 8/6/4 free points above 1 or 4/3 bonus points per dif dots or (current rating x4 XP)
 
-      //do we have either 8/6/4 free points above 1 or 4 bonus points per dif dots or (current rating x4 XP)
-      ???
+
+        //TODO: weight ternary attributes with only 3 BP
+
+        val beforeBonusPointsInThat : Int = solar.attributes.bonusPointsInvested
+        val afterBonusPointsInThat : Int = solar.attributes.copyWithChange(attributeIndex, rating).bonusPointsInvested
+
+        if (afterBonusPointsInThat - beforeBonusPointsInThat <= solar.bonusPointsUnspent) {
+          Success(AttributeChanged(id, attributeIndex, rating))
+        } else {
+          Failure(Exceptions.missBP())
+        }
+      } else {
+        //after chargen use xp:
+        val oldValue : AttributeRating = solar.attributes.block(attributeIndex)
+        val newValue : AttributeRating = AttributeRating(oldValue.attribute, Dots(rating))
+        val oldXP : Int = oldValue.xpValue
+        val newXP  : Int = newValue.xpValue
+        //val difDots : Int = rating - solar.attributes.block(0).dots.number
+        //val difXp : Int = difDots * 4
+        val xpDif = newXP - oldXP
+        if (oldValue.dots.number < rating && solar.experience.pointsLeftToSpend(false) >= xpDif) {
+          Success(AttributeChanged(id, attributeIndex, rating))
+        } else {
+          Failure(Exceptions.missXP())
+        }
+
+      }
     }
   }
 
   case class AttributeChanged(id : Id, attributeIndex : Int, rating : Int) extends SolarEvent {
-    override def commitInternal(old: EventInput): Solar = ???
+    override def commitInternal(old: EventInput): Solar = {
+      val solar : Solar = old.get[Solar]
+      if (solar.stillInCharGen) {
+        val newBlock : AttributeBlock = solar.attributes.copyWithChange(attributeIndex, rating).copyWithOrdering
+        val bpBefore : Int = solar.attributes.bonusPointsInvested
+        val bpNow : Int = newBlock.bonusPointsInvested
+        val bpNeededToSpend : Int = bpNow - bpBefore
+
+        solar.copy(bonusPointsUnspent = solar.bonusPointsUnspent - bpNeededToSpend, attributes = newBlock)
+      } else {
+        val newBlock : AttributeBlock = solar.attributes.copyWithChange(attributeIndex, rating).copyWithOrdering
+        val xpCost : Int = newBlock.block(attributeIndex).xpValue - solar.attributes.block(attributeIndex).xpValue
+
+        solar.copy(attributes = newBlock, experience = solar.experience.spendAmount(xpCost, solarCharm = false))
+      }
+
+    }
   }
 
 
@@ -336,6 +383,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   def diff(id : Id, a : Abilities.AbilityMatrix, b : Abilities.AbilityMatrix) : Seq[SolarCommand] = ???
 
   def diff(id : Id, a : Attributes.AttributeBlock, b : Attributes.AttributeBlock) : Seq[SolarCommand] = {
+    println(s"diffing attributes $a vs $b")
     a.block.indices.filter(i => a.block(i).dots.number != b.block(i).dots.number).map(i => {
       SetAttribute(id, i, b.block(i).dots.number)
     })
