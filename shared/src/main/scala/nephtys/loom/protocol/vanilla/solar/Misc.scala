@@ -12,10 +12,10 @@ object Misc {
   final case class Concept(concept : String) extends AnyVal
   final case class Anima(anima : String) extends AnyVal*/
 
-  final case class Dots(number : Byte) extends AnyVal
+  final case class Dots(number : Int) extends AnyVal
   final case class LimitTrigger(trigger : String) extends AnyVal
 
-  final case class Essence(rating : Byte) extends AnyVal
+  final case class Essence(rating : Int) extends AnyVal
   final case class WillpowerPoints(points : Byte) extends AnyVal
   //final case class WillpowerDots(points : Byte) extends AnyVal
 

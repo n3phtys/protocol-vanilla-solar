@@ -3,7 +3,7 @@ package nephtys.loom.protocol.vanilla.solar
 import nephtys.loom.protocol.shared.CharmRef
 import nephtys.loom.protocol.vanilla.solar.Abilities.SpecialtyAble
 import nephtys.loom.protocol.vanilla.solar.Intimacies.Intensity
-import nephtys.loom.protocol.vanilla.solar.Merits.Category
+import nephtys.loom.protocol.vanilla.solar.Merits.{Category, Merit}
 import nephtys.loom.protocol.vanilla.solar.Misc.{Caste, Dots}
 import org.nephtys.loom.generic.protocol.EventInput.{EventInput, Update}
 import org.nephtys.loom.generic.protocol.InternalStructures.{Email, EndpointRoot, FailableList, ID}
@@ -188,7 +188,101 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class ChangeMerit(id : Id, index : Int, newrating : Option[Int]) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
+      val solar : Solar = input.get[Solar]
+      if (newrating.forall(a => 0 <= a && a <= 5) && index >= 0 && solar.merits.size > index) {
+        println("Passing newrating check")
+        if (newrating.isEmpty) {
+          if (solar.merits(index).rating.number == 0 || solar.stillInCharGen) {
+            println("Passing inner empty check")
+            Success(MeritChanged(id, index, newrating))
+          } else {
+            println("Failing inner empty check")
+            Failure(new Exception("Cannot remove non-empty merits after chargen"))
+          }
+        } else {
+          val dif: Int = newrating.get - solar.merits(index).rating.number
+          if (solar.stillInCharGen) {
+            val dif: Int = newrating.get - solar.merits(index).rating.number
+
+            val oldSum = solar.merits.map(_.rating.number).sum
+            val newSum: Int = oldSum + dif
+
+            //only 10 free points or via bonus points (1 bp per dot) or with split at 10
+
+            val oldMeritBP: Int = oldSum - FreeMeritPoints
+            val newMeritBP: Int = newSum - FreeMeritPoints
+
+            val belowLimit: Int = newMeritBP - oldMeritBP
+            val aboveLimit: Int = dif - belowLimit
+
+            if (oldSum + dif <= FreeMeritPoints || aboveLimit <= solar.bonusPointsUnspent) {
+              Success(MeritChanged(id, index, newrating))
+            } else {
+              Failure(Exceptions.missBP())
+            }
+          } else {
+            //find rating-dif and calculate XP cost (3 per dot!)
+            if (dif > 0 && solar.experience.pointsLeftToSpend(false) >= (dif * 3)) {
+              Success(MeritChanged(id, index, newrating))
+            } else {
+              Failure(Exceptions.missXP())
+            }
+          }
+        }
+      } else {
+        println("IllegalArgumentException in ChangeMerit")
+        Failure(new IllegalArgumentException())
+      }
+    }
+  }
+
+  val FreeMeritPoints : Int = 10
+
+  case class MeritChanged(id : Id, index : Int, newrating : Option[Int]) extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = {
+      val solar : Solar = input.get[Solar]
+      if (solar.stillInCharGen) {
+        //allow split of free points vs bonus points
+        //create new list
+        val merits : List[Merit] = if (newrating.isDefined) {
+          val merit: Merit = solar.merits(index).copy(rating = Dots(newrating.getOrElse(0)))
+          solar.merits.updated(index, merit)
+        } else { solar.merits.take(index) ++ solar.merits.drop(index+1) }
+
+        val overlimitbefore: Int = solar.merits.map(_.rating.number).sum - FreeMeritPoints
+        val overlimitnow: Int = merits.map(_.rating.number).sum - FreeMeritPoints
+
+        if (overlimitbefore >= 0) {
+          if (overlimitnow >= 0) {
+            //use full bonus points
+            val dif = overlimitnow - overlimitbefore
+            solar.copy(bonusPointsUnspent = solar.bonusPointsUnspent - dif, merits = merits)
+          } else {
+            //don't use bonus points, instead give them back
+            solar.copy(bonusPointsUnspent = solar.bonusPointsUnspent + overlimitbefore, merits = merits)
+          }
+        } else {
+          if (overlimitnow >= 0) {
+            //take partial bonus points
+            solar.copy(bonusPointsUnspent = solar.bonusPointsUnspent - overlimitnow, merits = merits)
+          } else {
+            //don't use bonus points
+            solar.copy(merits = merits)
+          }
+        }
+      } else {
+        //add merit, decrease current xp, potential delete
+        val dif = newrating.getOrElse(0) - solar.merits(index).rating.number
+        val xp: Experiences.ExperienceBox = solar.experience.spendAmount(dif * 3, false)
+        val merits: List[Merit] = if (newrating.isEmpty) {
+          solar.merits.take(index) ++ solar.merits.drop(index+1)
+        } else {
+          solar.merits.updated(index, solar.merits(index).copy(rating = Dots(newrating.getOrElse(0))))
+        }
+        solar.copy(experience = xp, merits = merits)
+      }
+    }
   }
 
   case class AddNote(id : Id, str : String, index : Int ) extends SolarCommand {

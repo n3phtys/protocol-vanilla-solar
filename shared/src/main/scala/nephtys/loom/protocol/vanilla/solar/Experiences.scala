@@ -40,14 +40,34 @@ object Experiences {
 
     def essenceRating : Int = Experiences.spentXPtoEssenceLevel(generalXP.spent).rating.toInt
 
+    def pointsLeftToSpend(solarCharm : Boolean) : Int = if (solarCharm) {categories.filter(_._1 != SolarXP).map(_._2.current).sum} else {categories.map(_._2.current).sum}
+
     /**
       * used for automated spending (nothing manual)
-      * @param amount
-      * @param typ
-      * @return
       */
-    def spendAmount(amount : Int, typ : ExperienceType) : ExperienceBox = {
-      ???
+    def spendAmount(amount : Int, solarCharm : Boolean) : ExperienceBox = {
+      if (solarCharm) {
+        val newcategories: Map[ExperienceType, ExperienceCategory] = {
+          val spendOnTwo : Int = Math.max(0, Math.min( amount, specialXP.map(_.current).getOrElse(0)))
+          val spendAsSpecial : Option[ExperienceCategory] = specialXP.map(t => t.copy(current = t.current - spendOnTwo))
+          val leftAfterTwo : Int = amount - spendOnTwo
+          val spendAsGeneral : ExperienceCategory = generalXP.copy(current = generalXP.current - leftAfterTwo)
+          Map.apply[ExperienceType, ExperienceCategory](GeneralXP -> spendAsGeneral, SolarXP -> solarXP) ++ spendAsSpecial.map(a => (SpecialXP, a))
+        }
+        this.copy(categories = newcategories)
+      } else {
+        val newcategories: Map[ExperienceType, ExperienceCategory] = {
+          val spendOnOne : Int = Math.max(0, Math.min( amount, solarXP.current))
+          val spendAsSolar : ExperienceCategory = solarXP.copy(current = solarXP.current - spendOnOne)
+          val leftAfterOne : Int = amount - spendOnOne
+          val spendOnTwo : Int = Math.max(0, Math.min( leftAfterOne, specialXP.map(_.current).getOrElse(0)))
+          val spendAsSpecial : Option[ExperienceCategory] = specialXP.map(t => t.copy(current = t.current - spendOnTwo))
+          val leftAfterTwo : Int = leftAfterOne - spendOnTwo
+          val spendAsGeneral : ExperienceCategory = generalXP.copy(current = generalXP.current - leftAfterTwo)
+          Map.apply[ExperienceType, ExperienceCategory](GeneralXP -> spendAsGeneral, SolarXP -> spendAsSolar) ++ spendAsSpecial.map(a => (SpecialXP, a))
+        }
+        this.copy(categories = newcategories)
+      }
     }
 
     def addManualEntry(amount : Int, typ : ExperienceType, note : String, timestampSec : Long) : ExperienceBox = {
