@@ -318,13 +318,27 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
     }
   }
 
+  case class SetAttribute(id : Id, attributeIndex : Int, rating : Int) extends SolarCommand {
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
+      ???
+    }
+  }
+
+  case class AttributeChanged(id : Id, attributeIndex : Int, rating : Int) extends SolarEvent {
+    override def commitInternal(old: EventInput): Solar = ???
+  }
+
 
   //does not deal with specialties
-  def diff(a : Abilities.AbilityMatrix, b : Abilities.AbilityMatrix) : Seq[SolarCommand] = ???
+  def diff(id : Id, a : Abilities.AbilityMatrix, b : Abilities.AbilityMatrix) : Seq[SolarCommand] = ???
 
-  def diff(a : Attributes.AttributeBlock, b : Attributes.AttributeBlock) : Seq[SolarCommand] = ???
+  def diff(id : Id, a : Attributes.AttributeBlock, b : Attributes.AttributeBlock) : Seq[SolarCommand] = {
+    a.block.indices.filter(i => a.block(i).dots.number != b.block(i).dots.number).map(i => {
+      SetAttribute(id, i, b.block(i).dots.number)
+    })
+  }
 
-  def diff(a : Experiences.ExperienceBox, b : Experiences.ExperienceBox) : Seq[SolarCommand] = ???
+  def diff(id : Id, a : Experiences.ExperienceBox, b : Experiences.ExperienceBox) : Seq[SolarCommand] = ???
 
 
   override def readCommands(json: String): Seq[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Command] = read[Seq[SolarCommand]](json)
