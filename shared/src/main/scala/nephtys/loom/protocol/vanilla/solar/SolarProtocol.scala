@@ -1,7 +1,7 @@
 package nephtys.loom.protocol.vanilla.solar
 
 import nephtys.loom.protocol.shared.CharmRef
-import nephtys.loom.protocol.vanilla.solar.Abilities.{Ability, AbilityLikeSpecialtyAble, SpecialtyAble}
+import nephtys.loom.protocol.vanilla.solar.Abilities._
 import nephtys.loom.protocol.vanilla.solar.Attributes.{AttributeBlock, AttributeRating}
 import nephtys.loom.protocol.vanilla.solar.Intimacies.Intensity
 import nephtys.loom.protocol.vanilla.solar.Merits.{Category, Merit}
@@ -184,20 +184,106 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
 
 
   case class SetAbilityRating(id : Id, ability : Ability, rating : Int) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
+      val solar : Solar = input.get
+      val dif : Int = rating - solar.abilities.ratings(ability).number
+      if (solar.abilities.rateables.contains(ability.name) && rating >= 0 && rating <= 5) {
+        val (bpcost, xpcost, _) = solar.abilities.setRating(ability, rating)
+        if (solar.stillInCharGen) {
+          if (bpcost <= solar.bonusPointsUnspent) {
+            Success(AbilityRatingChanged(id, ability, rating))
+          } else {
+            Failure(Exceptions.missBP())
+          }
+        } else {
+          if (dif > 0 && xpcost <= solar.experience.pointsLeftToSpend(false)) {
+            Success(AbilityRatingChanged(id, ability, rating))
+          } else {
+            Failure(Exceptions.missXP())
+          }
+        }
+      } else {
+        Failure(new IllegalArgumentException)
+      }
+
+    }
   }
+
+  case class AbilityRatingChanged(id : Id, ability : Ability, rating : Int) extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = {
+      val solar : Solar = input.get
+      val (bpcost, xpcost, newability) = solar.abilities.setRating(ability, rating)
+      if (solar.stillInCharGen) {
+        solar.copy(abilities = newability, bonusPointsUnspent = solar.bonusPointsUnspent - bpcost)
+      } else {
+        solar.copy(abilities = newability, experience = solar.experience.spendAmount(xpcost, solarCharm = false))
+      }
+    }
+  }
+
   case class AddToAbilityFamily(id : Id, familyTitle : String, title : String) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
+      val solar : Solar = input.get
+      if(solar.abilities.rateables.contains(title) || !solar.abilities.families.contains(familyTitle)) {
+        Failure(new IllegalArgumentException)
+      } else {
+        Success(AbilityFamilyAdded(id, familyTitle, title))
+      }
+    }
+  }
+
+  case class AbilityFamilyAdded(id : Id, familyTitle : String, title : String) extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = {
+      val solar : Solar = input.get
+      solar.copy(abilities = solar.abilities.addSubability(familyTitle, title))
+    }
+  }
+
+  case class AbilityFamilyRemoved(id : Id, familyTitle : String, title : String) extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = {
+      val solar : Solar = input.get
+      solar.copy(abilities = solar.abilities.removeSubability(familyTitle, title))
+    }
   }
 
   case class RemoveFromAbilityFamily(id : Id, familyTitle : String, title : String) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
+      val solar : Solar = input.get
+      if(solar.abilities.getSubability(familyTitle, title).forall(a => solar.abilities.ratings(a).number == 0)) {
+        Failure(new IllegalArgumentException)
+      } else {
+        Success(AbilityFamilyRemoved(id, familyTitle, title))
+      }
+    }
   }
 
   case class SetAbilityType(id : Id, typeableTitle : String, typ : Abilities.Type) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
+      val solar : Solar = input.get
+      if (solar.abilities.typeables.contains(typeableTitle) && solar.stillInCharGen) {
+        if (typ match {
+          case Supernal => solar.abilities.numberOfSupernals < 1
+          case Favored => solar.abilities.numberOfFavoreds < 5
+          case Caste => solar.abilities.numberOfCastes < 4
+          case _ => true
+        }) {
+          Success(AbilityTypeChanged(id, typeableTitle, typ))
+        } else {
+          Failure(new Exception("Illegal number of Ability Types"))
+        }
+      } else {
+        Failure(new IllegalArgumentException)
+      }
+    }
   }
 
+  case class AbilityTypeChanged(id : Id, typeableTitle : String, typ : Abilities.Type) extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = {
+      val solar : Solar = input.get
+      val c = solar.abilities.setType(solar.abilities.parseTypeable(typeableTitle), typ)
+      solar.copy(abilities = c._2, bonusPointsUnspent = solar.bonusPointsUnspent - c._1)
+    }
+  }
 
   case class AddSpecialty(id : Id, specialtyAble: AbilityLikeSpecialtyAble, title : String) extends SolarCommand {
     override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
@@ -362,7 +448,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
       } else {
         //add merit, decrease current xp, potential delete
         val dif = newrating.getOrElse(0) - solar.merits(index).rating.number
-        val xp: Experiences.ExperienceBox = solar.experience.spendAmount(dif * 3, false)
+        val xp: Experiences.ExperienceBox = solar.experience.spendAmount(dif * 3, solarCharm = false)
         val merits: List[Merit] = if (newrating.isEmpty) {
           solar.merits.take(index) ++ solar.merits.drop(index+1)
         } else {
@@ -467,7 +553,27 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
 
 
   //does not deal with specialties
-  def diff(id : Id, a : Abilities.AbilityMatrix, b : Abilities.AbilityMatrix) : Seq[SolarCommand] = ???
+  def diff(id : Id, a : Abilities.AbilityMatrix, b : Abilities.AbilityMatrix) : Seq[SolarCommand] = {
+    //this includes new ability family changes and removing old ones changes
+    val changingOldVsAbilities : Seq[SolarCommand] = {
+      val s1 : Seq[AbilityLikeSpecialtyAble] = a.abilities.toSeq.sortBy(_.name)
+      val s2 : Seq[AbilityLikeSpecialtyAble] = b.abilities.toSeq.sortBy(_.name)
+
+      val oldToNewFamily : Seq[(AbilityFamily, AbilityFamily)] = s1.indices.filter(i => !s1(i).equals(s2(i))).map(i => (s1(i).asInstanceOf[AbilityFamily], s2(i).asInstanceOf[AbilityFamily]))
+
+      val adds : Seq[AddToAbilityFamily] = oldToNewFamily.flatMap(f => f._2.instances.filterNot(c => f._1.instances.exists(_.equals(c))).map(c => (f._1, c))).map(a => AddToAbilityFamily(id, familyTitle = a._1.familityName, a._2.name))
+
+      val removes : Seq[RemoveFromAbilityFamily] = oldToNewFamily.flatMap(f => f._1.instances.filterNot(c => f._2.instances.exists(_.equals(c))).map(c => (f._1, c))).map(a => RemoveFromAbilityFamily(id, familyTitle = a._1.familityName, a._2.name))
+
+      removes ++ adds
+    }
+    //type changes
+    val typeChanges : Seq[SetAbilityType] = a.types.keys.filter(k => !a.types(k).equals(b.types(k))).toSeq.map(k => SetAbilityType(id, k.typeabletitle , b.types(k) ))
+    //rating changes
+    val ratingChanges : Seq[SetAbilityRating] = b.ratings.keys.filter(k => b.ratings(k).number != a.ratings(k).number).toSeq.map(k => SetAbilityRating(id, k, b.ratings(k).number))
+
+    changingOldVsAbilities ++ typeChanges ++ ratingChanges
+  }
 
   def diff(id : Id, a : Attributes.AttributeBlock, b : Attributes.AttributeBlock) : Seq[SolarCommand] = {
     println(s"diffing attributes $a vs $b")

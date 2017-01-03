@@ -18,11 +18,12 @@ object Abilities {
     def name : String
   }
 
-  sealed trait AbilityLikeSpecialtyAble extends AbilityLike with SpecialtyAble
-
   sealed trait Typeable {
     def typeabletitle : String
   }
+
+  sealed trait AbilityLikeSpecialtyAble extends AbilityLike with SpecialtyAble with Typeable
+
 
   final case class Ability(name : String)
 
@@ -37,6 +38,8 @@ object Abilities {
   }
   final case class Specialty(name : String) extends AnyVal
   final case class AbilityMatrix(abilities : Set[AbilityLikeSpecialtyAble], ratings : Map[Ability, Dots], types : Map[Typeable, Type], specialties : Map[SpecialtyAble, Set[Specialty]]) {
+    def parseTypeable(typeableTitle: String) : Typeable = types.keySet.map(k => (k.typeabletitle, k)).toMap.getOrElse(typeableTitle, types.keySet.head)
+
     def buildTypeableTree : Map[String, (Map[String, Int], Boolean, Abilities.Type)] = {
         val t : Set[(String, Boolean, Map[String, Int], Abilities.Type)] = abilities.map {
           case s: SingleAbility => {
@@ -62,29 +65,76 @@ object Abilities {
       Math.min(28, ratings.values.map(i => Math.min(i.number, 3)).sum)
     }
 
+    def spentWithBonusPoints : Int = {
+      ratings.values.map(_.number).sum - spentWithFreePoints
+    }
+
+    def numberOfSupernals : Int = types.count(a => a._2 == Supernal)
+    def numberOfCastes : Int = types.count(a => a._2 == Caste)
+    def numberOfFavoreds : Int = types.count(a => a._2 == Favored)
+
     def numberOfSpecialties : Int = specialties.map(_._2.size).sum
 
     def addSpecialty(specialtyAble: AbilityLikeSpecialtyAble, title : String) : AbilityMatrix = copy(specialties = specialties.+((specialtyAble, specialties.getOrElse(specialtyAble, Set.empty).+(Specialty(title)))))
 
     def removeSpecialty(specialtyAble: AbilityLikeSpecialtyAble, title : String) : AbilityMatrix = copy(specialties = specialties.+((specialtyAble, specialties.getOrElse(specialtyAble, Set.empty).-(Specialty(title)))))
 
-    //bpcost, xpcost, abilitymatrix with change
-    def setRating(ability : Ability, rating : Int) : (Int, Int , AbilityMatrix) = {
-      ???
+
+    private def typeTo(ability : Ability) : Type = abilityToTypeMap.getOrElse(ability, Normal)
+
+    private def reducedCost(ability : Ability) : Boolean = typeTo(ability) != Normal
+
+    val abilityToTypeMap : Map[Ability, Type] = abilities.flatMap(typeable => typeable.abilities.map(a => (a, types(typeable)))).toMap
+
+
+    val totalBPValue : Int = {
+      //TODO: this calculation is not ideal, as this is computationally hard
+      //val over3AsTypesForeachDot : Seq[Type] = _
+      //val upTo3AsTypesForeachDot : Seq[Type] = _
+      val unreducedDotsUpTo3 : Int = ratings.filterNot(a => reducedCost(a._1)).filter(a => a._2.number <= 3).map(a => a._2.number).sum
+      val reducedDotsUpTo3 : Int = ratings.filter(a => reducedCost(a._1)).filter(a => a._2.number <= 3).map(a => a._2.number).sum
+      val unreducedDotsOver3 : Int = ratings.filterNot(a => reducedCost(a._1)).filter(a => a._2.number > 3).map(a => a._2.number).sum
+      val reducedDotsOver3 : Int = ratings.filter(a => reducedCost(a._1)).filter(a => a._2.number > 3).map(a => a._2.number).sum
+      val freeRest : Int = Math.max(0, unreducedDotsUpTo3 + reducedDotsOver3 - 28)
+      freeRest + unreducedDotsOver3 + unreducedDotsOver3 + reducedDotsOver3
     }
 
-    def setType(typeable: Typeable, typ : Type) : AbilityMatrix = {
-      ???
+    private def bpCostOf(ability : Ability, fromCurrentRating : Int, toNewRating : Int) : Int = {
+      copy(ratings = ratings.+((ability, Dots(toNewRating)))).totalBPValue
+    }
+    private def xpCostOf(ability : Ability, fromCurrentRating : Int, toNewRating : Int) : Int = {
+      if(reducedCost(ability)) {
+        (fromCurrentRating until toNewRating).map(i => (i * 2) - 1).sum
+      } else {
+        (fromCurrentRating until toNewRating).map(i => i * 2).sum
+      }
+    }
+
+    //bpcost, xpcost, abilitymatrix with change
+    def setRating(ability : Ability, rating : Int) : (Int, Int , AbilityMatrix) = {
+      val currentRating : Int = ratings(ability).number
+      val bpcost : Int = bpCostOf(ability, currentRating, rating)
+      val xpcost : Int = xpCostOf(ability, currentRating, rating)
+      val newabilitymatrix = copy(ratings = ratings.+((ability, Dots(rating))))
+      (bpcost, xpcost, newabilitymatrix)
+    }
+
+    //returns also bpcost of change (can be negative or zero!)
+    def setType(typeable: Typeable, typ : Type) : (Int, AbilityMatrix) = {
+      val s = copy(types = types.+((typeable, typ)))
+      (s.totalBPValue - totalBPValue, s)
     }
 
     def addSubability(familyTitle : String, title : String) : AbilityMatrix = {
-      copy(abilities = ???, ratings = ???)
-      ???
+      val oldFamily : AbilityFamily = abilities.find(p => p.name == title).get.asInstanceOf[AbilityFamily]
+      val newFamily : AbilityFamily = oldFamily.copy(instances = oldFamily.instances + Ability(title))
+      copy(abilities = abilities.-(oldFamily).+(newFamily), ratings = ratings + ((Ability(title), Dots(0))))
     }
 
     def removeSubability(familyTitle : String, title : String) : AbilityMatrix = {
-      copy(abilities = ???, ratings = ???)
-      ???
+      val oldFamily : AbilityFamily = abilities.find(p => p.name == title).get.asInstanceOf[AbilityFamily]
+      val newFamily : AbilityFamily = oldFamily.copy(instances = oldFamily.instances - Ability(title))
+      copy(abilities = abilities.-(oldFamily).+(newFamily), ratings = ratings - Ability(title))
     }
 
 
@@ -92,6 +142,12 @@ object Abilities {
 
 
     def specialtyAbles : Seq[String] = abilities.map(_.name).toSeq.sorted
+
+    def rateables : Set[String] = ratings.keySet.map(_.name)
+
+    def getSubability(familyTitle : String, ability : String) : Option[Ability] = abilities.find(_.name == familyTitle).flatMap(f => f.abilities.find(_.name == ability))
+
+    def families : Set[String] = abilities.filter(_.isInstanceOf[AbilityFamily]).map(_.name)
 
     def typeables : Set[String] = abilities.filter(_.isInstanceOf[Typeable]).map(_.asInstanceOf[Typeable].typeabletitle)
   }
@@ -130,9 +186,9 @@ object Abilities {
 
     override def name: String = familityName
 
-    def add(title : String) : AbilityFamily = ???
+    def add(title : String) : AbilityFamily = AbilityFamily(instances + Ability(title), familityName)
 
-    def remove(title : String) : AbilityFamily = ???
+    def remove(title : String) : AbilityFamily = AbilityFamily(instances - Ability(title), familityName)
   }
 
   def emptyMatrix : AbilityMatrix = {
