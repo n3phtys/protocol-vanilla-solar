@@ -72,7 +72,33 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class SetWillpower(id : Id, dots : Int) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
+      val solar : Solar = input.get
+      val dif = dots - solar.willpowerDots
+      if (dots < 5 || dots > 10 || (!solar.stillInCharGen && dif <= 0)) {
+        Failure(new IllegalArgumentException)
+      } else if ((solar.stillInCharGen && (solar.bonusPointsUnspent >= dif * 2)) || (!solar.stillInCharGen && (solar.experience.pointsLeftToSpend(false) >= dif * 8))) {
+        Success(WillpowerChanged(id, dots))
+      } else {
+        Failure(Exceptions.missXP())
+      }
+    }
+  }
+
+  case class WillpowerChanged(id : Id, dots : Int) extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = {
+      val solar : Solar = input.get
+      val dif = dots - solar.willpowerDots
+      if (solar.stillInCharGen) {
+        //if in chargen, change dot rating and bonuspointsunspent
+        val bpcost = dif * 2
+        solar.copy(willpowerDots = dots, bonusPointsUnspent = solar.bonusPointsUnspent - bpcost)
+      } else {
+        //if not in chargen, spend XP and change dot rating
+        val xpcost = dif * 8
+        solar.copy(willpowerDots = dots, experience = solar.experience.spendAmount(xpcost, solarCharm = false))
+      }
+    }
   }
 
   case class SetCaste(id : Id, caste : Caste) extends SolarCommand {
