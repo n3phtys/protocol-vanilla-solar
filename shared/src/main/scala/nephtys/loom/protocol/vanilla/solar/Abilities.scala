@@ -138,7 +138,8 @@ object Abilities {
     def removeSubability(familyTitle : String, title : String) : AbilityMatrix = {
       val oldFamily : AbilityFamily = abilities.find(p => p.name == familyTitle).get.asInstanceOf[AbilityFamily]
       val newFamily : AbilityFamily = oldFamily.copy(instances = oldFamily.instances - Ability(title))
-      copy(abilities = abilities.-(oldFamily).+(newFamily), ratings = ratings - Ability(title))
+      val typ = types(oldFamily)
+      copy(abilities = abilities.-(oldFamily).+(newFamily), types = types.-(oldFamily).+((newFamily, typ)), ratings = ratings - Ability(title))
     }
 
 
