@@ -59,19 +59,19 @@ object Abilities {
     }
     //TODO: brawl and martial arts can never be supernal at the same time
 
-    def spentWithFreePoints : Int = {
+    val spentWithFreePoints : Int = {
       //sum number of points 1-3
       //return min with 28
       Math.min(28, ratings.values.map(i => Math.min(i.number, 3)).sum)
     }
 
-    def spentWithBonusPoints : Int = {
+    val spentWithBonusPoints : Int = {
       ratings.values.map(_.number).sum - spentWithFreePoints
     }
 
-    def numberOfSupernals : Int = types.count(a => a._2 == Supernal)
-    def numberOfCastes : Int = types.count(a => a._2 == Caste)
-    def numberOfFavoreds : Int = types.count(a => a._2 == Favored)
+    val numberOfSupernals : Int = types.count(a => a._2 == Supernal)
+    val numberOfCastes : Int = types.count(a => a._2 == Caste)
+    val numberOfFavoreds : Int = types.count(a => a._2 == Favored)
 
     def numberOfSpecialties : Int = specialties.map(_._2.size).sum
 
@@ -84,7 +84,7 @@ object Abilities {
 
     private def reducedCost(ability : Ability) : Boolean = typeTo(ability) != Normal
 
-    val abilityToTypeMap : Map[Ability, Type] = abilities.flatMap(typeable => typeable.abilities.map(a => (a, types(typeable)))).toMap
+    val abilityToTypeMap : Map[Ability, Type] = abilities.flatMap(typeable => typeable.abilities.map(a => (a, types.get(typeable).getOrElse(Normal)))).toMap
 
 
     val totalBPValue : Int = {
@@ -126,13 +126,17 @@ object Abilities {
     }
 
     def addSubability(familyTitle : String, title : String) : AbilityMatrix = {
-      val oldFamily : AbilityFamily = abilities.find(p => p.name == title).get.asInstanceOf[AbilityFamily]
+      println(s"Beginning oldFamily with title $title and abilities $abilities")
+      val oldFamily : AbilityFamily = abilities.find(p => p.name == familyTitle).get.asInstanceOf[AbilityFamily]
+      println("Beginning newFamily")
       val newFamily : AbilityFamily = oldFamily.copy(instances = oldFamily.instances + Ability(title))
-      copy(abilities = abilities.-(oldFamily).+(newFamily), ratings = ratings + ((Ability(title), Dots(0))))
+      println(s"addSubability reached with $oldFamily and newfamily = $newFamily")
+      val typ = types(oldFamily)
+      copy(abilities = abilities.-(oldFamily).+(newFamily), types = types.-(oldFamily).+((newFamily, typ)), ratings = ratings + ((Ability(title), Dots(0))))
     }
 
     def removeSubability(familyTitle : String, title : String) : AbilityMatrix = {
-      val oldFamily : AbilityFamily = abilities.find(p => p.name == title).get.asInstanceOf[AbilityFamily]
+      val oldFamily : AbilityFamily = abilities.find(p => p.name == familyTitle).get.asInstanceOf[AbilityFamily]
       val newFamily : AbilityFamily = oldFamily.copy(instances = oldFamily.instances - Ability(title))
       copy(abilities = abilities.-(oldFamily).+(newFamily), ratings = ratings - Ability(title))
     }

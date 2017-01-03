@@ -225,8 +225,10 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
     override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
       val solar : Solar = input.get
       if(solar.abilities.rateables.contains(title) || !solar.abilities.families.contains(familyTitle)) {
+        println("AddToAbilityFamily failed")
         Failure(new IllegalArgumentException)
       } else {
+        println("AddToAbilityFamily succeeded")
         Success(AbilityFamilyAdded(id, familyTitle, title))
       }
     }
@@ -235,7 +237,9 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   case class AbilityFamilyAdded(id : Id, familyTitle : String, title : String) extends SolarEvent {
     override def commitInternal(input: EventInput): Solar = {
       val solar : Solar = input.get
-      solar.copy(abilities = solar.abilities.addSubability(familyTitle, title))
+      val s = solar.copy(abilities = solar.abilities.addSubability(familyTitle, title))
+      println("AbilityFamilyAdded returned!")
+      s
     }
   }
 
@@ -556,6 +560,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   def diff(id : Id, a : Abilities.AbilityMatrix, b : Abilities.AbilityMatrix) : Seq[SolarCommand] = {
     //this includes new ability family changes and removing old ones changes
     val changingOldVsAbilities : Seq[SolarCommand] = {
+      println("diff up to here")
       val s1 : Seq[AbilityLikeSpecialtyAble] = a.abilities.toSeq.sortBy(_.name)
       val s2 : Seq[AbilityLikeSpecialtyAble] = b.abilities.toSeq.sortBy(_.name)
 
@@ -565,14 +570,26 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
 
       val removes : Seq[RemoveFromAbilityFamily] = oldToNewFamily.flatMap(f => f._1.instances.filterNot(c => f._2.instances.exists(_.equals(c))).map(c => (f._1, c))).map(a => RemoveFromAbilityFamily(id, familyTitle = a._1.familityName, a._2.name))
 
+      println("diff up to there")
+
       removes ++ adds
     }
     //type changes
-    val typeChanges : Seq[SetAbilityType] = a.types.keys.filter(k => !a.types(k).equals(b.types(k))).toSeq.map(k => SetAbilityType(id, k.typeabletitle , b.types(k) ))
-    //rating changes
-    val ratingChanges : Seq[SetAbilityRating] = b.ratings.keys.filter(k => b.ratings(k).number != a.ratings(k).number).toSeq.map(k => SetAbilityRating(id, k, b.ratings(k).number))
+    val typeChanges : Seq[SetAbilityType] = a.types.keys.filter(k => !a.types.get(k).equals(b.types.get(k))).toSeq.map(k => SetAbilityType(id, k.typeabletitle , b.types.getOrElse(k, Normal) ))
 
-    changingOldVsAbilities ++ typeChanges ++ ratingChanges
+
+    println("typeChanges also")
+    //rating changes
+    val ratingChanges : Seq[SetAbilityRating] = b.ratings.keys.filter(k => b.ratings.get(k) != a.ratings.get(k)).toSeq.map(k => SetAbilityRating(id, k, b.ratings.get(k).map(_.number).getOrElse(0)))
+
+
+
+    val all = changingOldVsAbilities ++ typeChanges ++ ratingChanges
+
+    println(s"All the ability changes : $all")
+
+    all
+
   }
 
   def diff(id : Id, a : Attributes.AttributeBlock, b : Attributes.AttributeBlock) : Seq[SolarCommand] = {
