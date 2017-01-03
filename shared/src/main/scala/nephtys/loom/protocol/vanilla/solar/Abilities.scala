@@ -57,10 +57,38 @@ object Abilities {
     //TODO: brawl and martial arts can never be supernal at the same time
 
     def spentWithFreePoints : Int = {
-      //TODO: sum number of points 1-3
-      //TODO: return min with 28
+      //sum number of points 1-3
+      //return min with 28
       Math.min(28, ratings.values.map(i => Math.min(i.number, 3)).sum)
     }
+
+    def numberOfSpecialties : Int = specialties.map(_._2.size).sum
+
+    def addSpecialty(specialtyAble: AbilityLikeSpecialtyAble, title : String) : AbilityMatrix = copy(specialties = specialties.+((specialtyAble, specialties.getOrElse(specialtyAble, Set.empty).+(Specialty(title)))))
+
+    def removeSpecialty(specialtyAble: AbilityLikeSpecialtyAble, title : String) : AbilityMatrix = copy(specialties = specialties.+((specialtyAble, specialties.getOrElse(specialtyAble, Set.empty).-(Specialty(title)))))
+
+    //bpcost, xpcost, abilitymatrix with change
+    def setRating(ability : Ability, rating : Int) : (Int, Int , AbilityMatrix) = {
+      ???
+    }
+
+    def setType(typeable: Typeable, typ : Type) : AbilityMatrix = {
+      ???
+    }
+
+    def addSubability(familyTitle : String, title : String) : AbilityMatrix = {
+      copy(abilities = ???, ratings = ???)
+      ???
+    }
+
+    def removeSubability(familyTitle : String, title : String) : AbilityMatrix = {
+      copy(abilities = ???, ratings = ???)
+      ???
+    }
+
+
+
 
 
     def specialtyAbles : Seq[String] = abilities.map(_.name).toSeq.sorted
@@ -68,9 +96,9 @@ object Abilities {
     def typeables : Set[String] = abilities.filter(_.isInstanceOf[Typeable]).map(_.asInstanceOf[Typeable].typeabletitle)
   }
 
-  private val inverseSpecialtyMap : Map[String, SpecialtyAble] = emptyMatrix.abilities.map(s => (s.toString, s)).toMap
-  private val defaultSpecialty : SpecialtyAble = emptyMatrix.abilities.head
-  def specialtyAble(from : String) : SpecialtyAble = inverseSpecialtyMap.getOrElse(from, defaultSpecialty)
+  private val inverseSpecialtyMap : Map[String, AbilityLikeSpecialtyAble] = emptyMatrix.abilities.map(s => (s.toString, s)).toMap
+  private val defaultSpecialty : AbilityLikeSpecialtyAble = emptyMatrix.abilities.head
+  def specialtyAble(from : String) : AbilityLikeSpecialtyAble = inverseSpecialtyMap.getOrElse(from, defaultSpecialty)
 
   sealed trait Type
   case object Normal extends Type
@@ -101,6 +129,10 @@ object Abilities {
     override def typeabletitle: String = familityName
 
     override def name: String = familityName
+
+    def add(title : String) : AbilityFamily = ???
+
+    def remove(title : String) : AbilityFamily = ???
   }
 
   def emptyMatrix : AbilityMatrix = {

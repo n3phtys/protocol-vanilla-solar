@@ -1,7 +1,7 @@
 package nephtys.loom.protocol.vanilla.solar
 
 import nephtys.loom.protocol.shared.CharmRef
-import nephtys.loom.protocol.vanilla.solar.Abilities.SpecialtyAble
+import nephtys.loom.protocol.vanilla.solar.Abilities.{Ability, AbilityLikeSpecialtyAble, SpecialtyAble}
 import nephtys.loom.protocol.vanilla.solar.Attributes.{AttributeBlock, AttributeRating}
 import nephtys.loom.protocol.vanilla.solar.Intimacies.Intensity
 import nephtys.loom.protocol.vanilla.solar.Merits.{Category, Merit}
@@ -182,12 +182,73 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
     override def commitInternal(old: EventInput): Solar = old.get[Solar].copy(public = public)
   }
 
-  case class AddSpecialty(id : Id, specialtyAble: SpecialtyAble, title : String) extends SolarCommand {
+
+  case class SetAbilityRating(id : Id, ability : Ability, rating : Int) extends SolarCommand {
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+  }
+  case class AddToAbilityFamily(id : Id, familyTitle : String, title : String) extends SolarCommand {
     override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
   }
 
-  case class RemoveSpecialty(id : Id, specialtyAble: SpecialtyAble, title : String) extends SolarCommand {
+  case class RemoveFromAbilityFamily(id : Id, familyTitle : String, title : String) extends SolarCommand {
     override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+  }
+
+  case class SetAbilityType(id : Id, typeableTitle : String, typ : Abilities.Type) extends SolarCommand {
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+  }
+
+
+  case class AddSpecialty(id : Id, specialtyAble: AbilityLikeSpecialtyAble, title : String) extends SolarCommand {
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
+      val solar : Solar = input.get
+      val xpcost : Int = 3
+      val bpcost : Int = 1
+      if (( (solar.stillInCharGen && (solar.abilities.numberOfSpecialties < xpcost || solar.bonusPointsUnspent >= bpcost)) || (!solar.stillInCharGen && solar.experience.pointsLeftToSpend(false) >= 3) ) && solar.abilities.abilities.contains(specialtyAble) && !solar.abilities.specialties.get(specialtyAble).exists(_.exists(_.name == title))) {
+        println("Succeed AddSpecialty")
+        Success(SpecialtyAdded(id, specialtyAble, title))
+      } else {
+        println("Failed AddSpecialty")
+        Failure(new IllegalArgumentException)
+      }
+    }
+  }
+
+  case class RemoveSpecialty(id : Id, specialtyAble: AbilityLikeSpecialtyAble, title : String) extends SolarCommand {
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
+      val solar : Solar = input.get
+      if (solar.stillInCharGen && solar.abilities.abilities.contains(specialtyAble) && solar.abilities.specialties.get(specialtyAble).exists(_.exists(_.name == title))) {
+        Success(SpecialtyRemoved(id, specialtyAble, title))
+      } else {
+        Failure(new IllegalArgumentException)
+      }
+    }
+  }
+
+  case class SpecialtyRemoved(id : Id, specialtyAble: AbilityLikeSpecialtyAble, title : String) extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = {
+      val solar : Solar = input.get
+      val xpcost : Int = -3
+      val bpcost : Int = if (solar.abilities.numberOfSpecialties <= 4) 0 else -1
+      if (solar.stillInCharGen) {
+        solar.copy(abilities = solar.abilities.removeSpecialty(specialtyAble, title), bonusPointsUnspent = solar.bonusPointsUnspent - bpcost)
+      } else {
+        solar.copy(abilities = solar.abilities.removeSpecialty(specialtyAble, title), experience = solar.experience.spendAmount(xpcost, solarCharm = false))
+      }
+    }
+  }
+
+  case class SpecialtyAdded(id : Id, specialtyAble: AbilityLikeSpecialtyAble, title : String) extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = {
+      val solar : Solar = input.get
+      val xpcost : Int = 3
+      val bpcost : Int = if (solar.abilities.numberOfSpecialties < 4) 0 else 1
+      if (solar.stillInCharGen) {
+        solar.copy(abilities = solar.abilities.addSpecialty(specialtyAble, title), bonusPointsUnspent = solar.bonusPointsUnspent - bpcost)
+      } else {
+        solar.copy(abilities = solar.abilities.addSpecialty(specialtyAble, title), experience = solar.experience.spendAmount(xpcost, solarCharm = false))
+      }
+    }
   }
 
   //includes delete
