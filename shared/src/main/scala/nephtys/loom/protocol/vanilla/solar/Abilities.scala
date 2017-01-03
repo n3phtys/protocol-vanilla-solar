@@ -91,16 +91,16 @@ object Abilities {
       //TODO: this calculation is not ideal, as this is computationally hard
       //val over3AsTypesForeachDot : Seq[Type] = _
       //val upTo3AsTypesForeachDot : Seq[Type] = _
-      val unreducedDotsUpTo3 : Int = ratings.filterNot(a => reducedCost(a._1)).filter(a => a._2.number <= 3).map(a => a._2.number).sum
-      val reducedDotsUpTo3 : Int = ratings.filter(a => reducedCost(a._1)).filter(a => a._2.number <= 3).map(a => a._2.number).sum
-      val unreducedDotsOver3 : Int = ratings.filterNot(a => reducedCost(a._1)).filter(a => a._2.number > 3).map(a => a._2.number).sum
-      val reducedDotsOver3 : Int = ratings.filter(a => reducedCost(a._1)).filter(a => a._2.number > 3).map(a => a._2.number).sum
+      val unreducedDotsUpTo3 : Int = ratings.filterNot(a => reducedCost(a._1)).filter(a => a._2.number <= 3).map(a => 1).sum
+      val reducedDotsUpTo3 : Int = ratings.filter(a => reducedCost(a._1)).filter(a => a._2.number <= 3).map(a => 1).sum
+      val unreducedDotsOver3 : Int = ratings.filterNot(a => reducedCost(a._1)).filter(a => a._2.number > 3).map(a => 1).sum
+      val reducedDotsOver3 : Int = ratings.filter(a => reducedCost(a._1)).filter(a => a._2.number > 3).map(a => 1).sum
       val freeRest : Int = Math.max(0, unreducedDotsUpTo3 + reducedDotsOver3 - 28)
       freeRest + unreducedDotsOver3 + unreducedDotsOver3 + reducedDotsOver3
     }
 
     private def bpCostOf(ability : Ability, fromCurrentRating : Int, toNewRating : Int) : Int = {
-      copy(ratings = ratings.+((ability, Dots(toNewRating)))).totalBPValue
+      copy(ratings = ratings.+((ability, Dots(toNewRating)))).totalBPValue - totalBPValue
     }
     private def xpCostOf(ability : Ability, fromCurrentRating : Int, toNewRating : Int) : Int = {
       if(reducedCost(ability)) {

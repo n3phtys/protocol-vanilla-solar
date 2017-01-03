@@ -581,7 +581,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
     println("typeChanges also")
     //rating changes
     val ratingChanges : Seq[SetAbilityRating] = b.ratings.keys.filter(k => b.ratings.get(k) != a.ratings.get(k)).toSeq.map(k => SetAbilityRating(id, k, b.ratings.get(k).map(_.number).getOrElse(0)))
-
+    println(s"B = $b")
 
 
     val all = changingOldVsAbilities ++ typeChanges ++ ratingChanges
