@@ -36,7 +36,7 @@ lazy val solarprotocol = crossProject.in(file(".")).
 
     libraryDependencies += "org.scalactic" %% "scalactic" % "3.0.0",
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.0" % "test",
-    libraryDependencies += "com.lihaoyi" %% "upickle" % "0.4.3"
+    libraryDependencies += "com.lihaoyi" %% "upickle" % "0.4.4"
 
   )//.configureJVM(_.dependsOn(genericProtocolProject))
     //.configureJS(_.dependsOn(genericProtocolProject))
