@@ -157,9 +157,14 @@ object Abilities {
     def typeables : Set[String] = abilities.filter(_.isInstanceOf[Typeable]).map(_.asInstanceOf[Typeable].typeabletitle)
   }
 
-  private val inverseSpecialtyMap : Map[String, AbilityLikeSpecialtyAble] = emptyMatrix.abilities.map(s => (s.toString, s)).toMap
+  private val inverseSpecialtyMap : Map[String, AbilityLikeSpecialtyAble] = emptyMatrix.abilities.map(s => (s.name, s)).toMap
+
   private val defaultSpecialty : AbilityLikeSpecialtyAble = emptyMatrix.abilities.head
-  def specialtyAble(from : String) : AbilityLikeSpecialtyAble = inverseSpecialtyMap.getOrElse(from, defaultSpecialty)
+  def specialtyAble(from : String) : AbilityLikeSpecialtyAble = {
+    val r = inverseSpecialtyMap.getOrElse(from, defaultSpecialty)
+    println(s"Called specialtyAble on map $inverseSpecialtyMap with ( $from ), return $r (default would be $defaultSpecialty)")
+    r
+  }
 
   sealed trait Type
   case object Normal extends Type
