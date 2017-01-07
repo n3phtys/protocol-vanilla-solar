@@ -3,6 +3,7 @@ package nephtys.loom.protocol.vanilla.solar
 import nephtys.loom.protocol.vanilla.solar.Misc.Essence
 
 import scala.scalajs.js.annotation.JSExportAll
+import scala.util.{Failure, Success, Try}
 
 /**
   * Created by nephtys on 12/10/16.
@@ -26,7 +27,7 @@ object Experiences {
   def emptyBox : ExperienceBox = ExperienceBox(Map(SolarXP -> ExperienceCategory((0), (0)), GeneralXP -> ExperienceCategory((0), (0))), List.empty)
 
 
-  def mockBox : ExperienceBox = emptyBox.addManualEntry(30, SolarXP, "some reason", 1234).addManualEntry(20, GeneralXP, "other reason", 1250)
+  def mockBox : ExperienceBox = emptyBox.addManualEntry(30, SolarXP, "some reason", 1234).get.addManualEntry(20, GeneralXP, "other reason", 1250).get
 
   @JSExportAll
   final case class ExperienceBox(categories : Map[ExperienceType, ExperienceCategory], manualEntries : List[ManualEntry]) {
@@ -70,15 +71,32 @@ object Experiences {
       }
     }
 
-    def addManualEntry(amount : Int, typ : ExperienceType, note : String, timestampSec : Long) : ExperienceBox = {
-      assert(amount != 0)
+    def addManualEntry(amount : Int, typ : ExperienceType, note : String, timestampSec : Long) : Try[ExperienceBox] = {
       val increase = if(amount > 0) amount else 0
       val decrease = if(amount < 0) amount else 0
       val newEntry : ManualEntry = if (amount > 0) {ManualGain(Math.abs(amount), typ, note, timestampSec)} else {ManualSpending(Math.abs(amount), typ, note, timestampSec)}
       val old : ExperienceCategory = categories.getOrElse(typ, ExperienceCategory(0, 0))
-      val newCat : ExperienceCategory = ExperienceCategory(old.current + decrease + increase, old.total + increase)
-      ExperienceBox(categories + ((typ, newCat)), newEntry :: manualEntries)
+      val newCat : ExperienceCategory = ExperienceCategory(current = old.current + decrease + increase, total =  old.total + increase)
+
+
+      if (amount == 0) {
+        Failure(new IllegalArgumentException)
+      } else if (amount > 0) {
+        Success(
+          ExperienceBox(categories + ((typ, newCat)), newEntry :: manualEntries)
+        )
+      } else {
+        //decrease, therefore check before allowing
+        if(amount * -1 > old.current) {
+          Failure(new IllegalStateException)
+        } else {
+          Success(ExperienceBox(categories + ((typ, newCat)), newEntry :: manualEntries))
+        }
+      }
+
     }
+
+
     /*
     def removeManualEntry(index : Int) : Option[ExperienceBox] = if (manualEntries.size > index) Some({
       val toR : ManualEntry = manualEntries(index)

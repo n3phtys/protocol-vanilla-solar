@@ -3,6 +3,7 @@ package nephtys.loom.protocol.vanilla.solar
 import nephtys.loom.protocol.shared.CharmRef
 import nephtys.loom.protocol.vanilla.solar.Abilities._
 import nephtys.loom.protocol.vanilla.solar.Attributes.{AttributeBlock, AttributeRating}
+import nephtys.loom.protocol.vanilla.solar.Experiences.ExperienceType
 import nephtys.loom.protocol.vanilla.solar.Intimacies.Intensity
 import nephtys.loom.protocol.vanilla.solar.Merits.{Category, Merit}
 import nephtys.loom.protocol.vanilla.solar.Misc.{Caste, Dots}
@@ -108,6 +109,20 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   case class CasteChanged(id : Id, caste : Caste) extends SolarEvent {
     override def commitInternal(old: EventInput): Solar = old.get[Solar].copy(caste = Some(caste))
   }
+
+  case class AddManualExperienceChange(id : Id, amountAdded : Int, typ : ExperienceType, note : String) extends SolarCommand {
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
+      input.get[Solar].experience.addManualEntry(amountAdded, typ, note, System.currentTimeMillis()).map(t => ExperienceChangedManually(id, amountAdded, typ, note, System.currentTimeMillis()))
+    }
+  }
+
+  case class ExperienceChangedManually(id : Id, amountAdded : Int, typ : ExperienceType, note : String, timestamp : Long) extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = {
+      val s : Solar = input.get
+      s.copy(experience = s.experience.addManualEntry(amountAdded, typ, note, timestamp).get)
+    }
+  }
+
 
   case class SetAnima(id : Id, anima : String) extends SolarCommand {
     override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = Success(AnimaChanged(id, anima))
@@ -599,7 +614,6 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
     })
   }
 
-  def diff(id : Id, a : Experiences.ExperienceBox, b : Experiences.ExperienceBox) : Seq[SolarCommand] = ???
 
 
   override def readCommands(json: String): Seq[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Command] = read[Seq[SolarCommand]](json)
