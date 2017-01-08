@@ -516,6 +516,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
       val solar : Solar = input.get[Solar]
       //are rating and attribute in range?
       if (attributeIndex < 0 || attributeIndex >= 9 || rating < 1 || rating > 5) {
+        println(s"Failing $this with IllegalArgumentException")
         Failure(new IllegalArgumentException)
       } else if (solar.stillInCharGen) {
         //do we have either 8/6/4 free points above 1 or 4/3 bonus points per dif dots or (current rating x4 XP)
@@ -527,8 +528,10 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
         val afterBonusPointsInThat : Int = solar.attributes.copyWithChange(attributeIndex, rating).bonusPointsInvested
 
         if (afterBonusPointsInThat - beforeBonusPointsInThat <= solar.bonusPointsUnspent) {
+          println(s"Succeeding $this with AttributeChanged")
           Success(AttributeChanged(id, attributeIndex, rating))
         } else {
+          println(s"Failing $this with missBP Exception")
           Failure(Exceptions.missBP())
         }
       } else {
@@ -541,8 +544,10 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
         //val difXp : Int = difDots * 4
         val xpDif = newXP - oldXP
         if (oldValue.dots.number < rating && solar.experience.pointsLeftToSpend(false) >= xpDif) {
+          println(s"Succeeding $this with AttributeChanged")
           Success(AttributeChanged(id, attributeIndex, rating))
         } else {
+          println(s"Failing $this with missXP Exception")
           Failure(Exceptions.missXP())
         }
 
