@@ -98,6 +98,9 @@ object Attributes {
     def secondaryDots: Int =secondary.map(_.dots.number).sum
     def ternaryDots: Int = ternary.map(_.dots.number).sum
 
+
+    def getRating(attributeName : String) : Option[Int] = this.block.find(a => a.attribute.toString.equalsIgnoreCase(attributeName)).map(_.dots.number)
+
     def order(i : Int) : IndexedSeq[AttributeRating] = (ordering, i) match {
       case (0, 0) => physicals
       case (0, 1) => socials

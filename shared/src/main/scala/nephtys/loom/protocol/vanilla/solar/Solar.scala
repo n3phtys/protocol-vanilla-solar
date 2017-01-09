@@ -46,7 +46,9 @@ final case class Solar(
 
                       notes : List[String]
 
-                      ) extends org.nephtys.loom.generic.protocol.Aggregate[Solar] {
+                      )
+  extends org.nephtys.loom.generic.protocol.Aggregate[Solar]
+with CharmLearnable{
 
   //calculate based on spent experience
   def essence : Essence = {
@@ -54,7 +56,59 @@ final case class Solar(
   }
 
 
-  //list all commands that need to be executed to translate this solar aggregate instance the other aggregate, or failed if impossible
-  def diff(other: Solar) : Try[Seq[SolarProtocol.Command]] = ???
 
+  override def abilityRating(abilityName: String): Option[Int] = abilities.getRatingForCharms(abilityName)
+
+  override def attributeRating(attributeName: String): Option[Int] = attributes.getRating(attributeName)
+
+
+  override def canLearn(ct: CharmType): Boolean = ct match {
+    case SiderealMartialArts => true
+    case MartialArts => true
+    case EclipseCharm => caste.contains(Eclipse)
+    case SolarCharm => true
+    case Evocation => true
+    case TerestrialSpell => canCastTerrestrialCircle
+    case CelestialSpell => canCastCelestialCircle
+    case SolarCircleSpell => canCastSolarCircle
+    case SpiritCharm => false
+  }
+
+  private def canCastTerrestrialCircle : Boolean = true
+
+  //todo: check if terrestrial circle charm was bought and essence >= 3 (yes, that one!)
+  private def canCastCelestialCircle : Boolean = ???
+
+  //todo: check if celestial circle charm was bought and essence >= 5 (yes, that one!)
+  private def canCastSolarCircle : Boolean = ???
 }
+
+
+trait CharmLearnable extends Essencable with Abilitable with Attributable with Learnable
+
+trait Essencable {
+  def essence : Essence
+}
+
+trait Abilitable {
+  def abilityRating(abilityName : String) : Option[Int]
+}
+
+trait Attributable {
+  def attributeRating(attributeName : String) : Option[Int]
+}
+
+trait Learnable {
+  def canLearn(ct : CharmType) : Boolean
+}
+
+sealed trait CharmType
+case object SiderealMartialArts extends CharmType
+case object MartialArts extends CharmType
+case object SpiritCharm extends CharmType
+case object EclipseCharm extends CharmType
+case object SolarCharm extends CharmType
+case object Evocation extends CharmType
+case object TerestrialSpell extends CharmType
+case object CelestialSpell extends CharmType
+case object SolarCircleSpell extends CharmType

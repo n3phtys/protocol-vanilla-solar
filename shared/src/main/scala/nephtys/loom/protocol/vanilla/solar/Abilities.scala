@@ -75,6 +75,15 @@ object Abilities {
 
     def numberOfSpecialties : Int = specialties.map(_._2.size).sum
 
+
+    def getRatingForCharms(category : String) : Option[Int] = {
+      abilities.find {
+        case s: SingleAbility => s.ability.name.equalsIgnoreCase(category)
+        case d: DuoAbilityGroup => d.abilityA.name.equalsIgnoreCase(category) || d.abilityB.name.equalsIgnoreCase(category)
+        case f: AbilityFamily => f.name.equalsIgnoreCase(category) || f.instances.exists(_.name.equalsIgnoreCase(category))
+      }.map(s => s.abilities.map(a => ratings.mapValues(c => c.number).getOrElse(a, 0)).sum)
+    }
+
     def addSpecialty(specialtyAble: AbilityLikeSpecialtyAble, title : String) : AbilityMatrix = copy(specialties = specialties.+((specialtyAble, specialties.getOrElse(specialtyAble, Set.empty).+(Specialty(title)))))
 
     def removeSpecialty(specialtyAble: AbilityLikeSpecialtyAble, title : String) : AbilityMatrix = copy(specialties = specialties.+((specialtyAble, specialties.getOrElse(specialtyAble, Set.empty).-(Specialty(title)))))
@@ -84,7 +93,7 @@ object Abilities {
 
     private def reducedCost(ability : Ability) : Boolean = typeTo(ability) != Normal
 
-    val abilityToTypeMap : Map[Ability, Type] = abilities.flatMap(typeable => typeable.abilities.map(a => (a, types.get(typeable).getOrElse(Normal)))).toMap
+    val abilityToTypeMap : Map[Ability, Type] = abilities.flatMap(typeable => typeable.abilities.map(a => (a, types.getOrElse(typeable, Normal)))).toMap
 
 
     val totalBPValue : Int = {
