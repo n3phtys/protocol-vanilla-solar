@@ -81,6 +81,8 @@ with CharmLearnable{
 
   //todo: check if celestial circle charm was bought and essence >= 5 (yes, that one!)
   private def canCastSolarCircle : Boolean = ???
+
+  override def has(charm: CharmRef): Boolean = charms.contains(charm)
 }
 
 
@@ -100,6 +102,8 @@ trait Attributable {
 
 trait Learnable {
   def canLearn(ct : CharmType) : Boolean
+
+  def has(charm : CharmRef) : Boolean
 }
 
 sealed trait CharmType
