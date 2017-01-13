@@ -1,30 +1,48 @@
 package nephtys.loom.protocol.shared
 
 import nephtys.loom.protocol.shared.CharmDatastructures._
+import nephtys.loom.protocol.shared.Powers.Evocations.BelovedAdorei.Evo
 import nephtys.loom.protocol.shared.Powers.SolarCharms.Occult.Sorcery.{CelestialCircleSorcery, TerrestrialCircleSorcery}
+
+import scala.scalajs.js.annotation.JSExportAll
 
 /**
   * Created by Christopher on 12.01.2017.
   */
+@JSExportAll
 object Powers {
 
+  @JSExportAll
   sealed trait Power {
     def essence : EssenceDots
+    val essenceInt : Int = essence.dots
+
     def keywords : Set[String]
     def prerequisite : Set[Power]
   }
 
+  @JSExportAll
   sealed trait Charm extends Power {
     def charmType : CharmType
     def duration : String
     def cost : String
   }
 
+  @JSExportAll
   object SolarCharms {
+
+    def solarCharms: Seq[SolarCharm with Product with Serializable] = Occult.occultCharms
+
+    @JSExportAll
     sealed trait SolarCharm extends Charm {
       def abilityRequirement : Ability
+      val abilityString : String = abilityRequirement.ability
+      val abilityInt : Int = abilityRequirement.dots
     }
+    @JSExportAll
      object Occult {
+
+       def occultCharms: Seq[SolarCharm with Product with Serializable] = Seq(SpiritDetectingGlance, SpiritCuttingAttack, SpiritDrainingStance, UncannyPerceptionTechnique, KeenUnnaturalEye) ++ Sorcery.sorceryCharms
 
        case object SpiritDetectingGlance extends SolarCharm {
          override def abilityRequirement: Ability = Ability("Occult", 1)
@@ -105,7 +123,10 @@ object Powers {
 
 
 
+      @JSExportAll
        object Sorcery {
+
+         def sorceryCharms = Seq(TerrestrialCircleSorcery, CelestialCircleSorcery, SolarCircleSorcery)
 
          case object TerrestrialCircleSorcery extends SolarCharm {
          override def abilityRequirement: Ability = Ability("Occult", 3)
@@ -157,14 +178,21 @@ object Powers {
      }
   }
 
+  @JSExportAll
   object Spells {
+    def spells: Seq[Spell with Product with Serializable] = TerrestrialCircle.terrestrialCircleSpells ++ CelestialCircle.celestialCircleSpells ++ SolarCircle.solarCircleSpells
+
+    @JSExportAll
     sealed trait Spell extends Power {
       def shapingMoteCost : Int
       def willpowerCost : Int
       def duration : String
     }
 
+    @JSExportAll
     object TerrestrialCircle {
+      def terrestrialCircleSpells: Seq[TerrestrialCircleSpell with Product with Serializable]  = Seq()
+
       sealed trait TerrestrialCircleSpell extends Spell {
         override def willpowerCost = 2
         override def prerequisite: Set[Power] = Set.empty
@@ -175,7 +203,10 @@ object Powers {
 
     }
 
+    @JSExportAll
     object CelestialCircle {
+      def celestialCircleSpells: Seq[CelestialCircleSpell with Product with Serializable]  = Seq()
+
       sealed trait CelestialCircleSpell extends Spell {
         override def willpowerCost = 2
         override def prerequisite = Set(TerrestrialCircleSorcery)
@@ -183,7 +214,10 @@ object Powers {
       }
     }
 
+    @JSExportAll
     object SolarCircle {
+      def solarCircleSpells: Seq[SolarCircleSpell with Product with Serializable] = Seq(BenedictionOfArchgenesis, DeathRay, DemonOfTheThirdCircle, RainOfDoom)
+
       sealed trait SolarCircleSpell extends Spell {
         override def willpowerCost = 3
         override def prerequisite = Set(CelestialCircleSorcery)
@@ -226,13 +260,19 @@ object Powers {
 
   }
 
+  @JSExportAll
   object Evocations {
-      sealed trait Evocation extends Charm {
+    def evocations: Seq[Evocation with Product with Serializable] = BelovedAdorei.evocations
+
+    sealed trait Evocation extends Charm {
         def artifactName : String
 
       }
 
+    @JSExportAll
       object BelovedAdorei {
+        def evocations = Seq(HeartKnowingBlade, NoOtherBlade, MagnanimousSunfireBlast, HolyMiracleStrike, BattleDanceOfTheWarriorWed)
+
         sealed trait Evo extends Evocation{
           override def artifactName = "Beloved Adorei"
         }
@@ -304,7 +344,11 @@ object Powers {
       }
   }
 
+  @JSExportAll
   object EclipseCharms {
+    def eclipseCharms = Seq(SeductiveShapechange, NightBlackCarapace, StormStirringLash)
+
+    @JSExportAll
     sealed trait EclipseCharm extends Charm {
       override def prerequisite: Set[Power] = Set.empty
     }
@@ -346,12 +390,21 @@ object Powers {
 
   }
 
+  @JSExportAll
   object MartialArtsCharms {
+    def martialArtsCharms: Seq[MartialArtsCharm with Product with Serializable] = DreamingPearlCourtesanStyle.charms
+
+    @JSExportAll
     sealed trait MartialArtsCharm extends Charm {
       def martialArtsDotsRequired : Int
     }
 
+    @JSExportAll
     object DreamingPearlCourtesanStyle {
+      def charms = Seq(DemureCarpFeint, ElegantWeaponRepertoire, PearlescentFiligreeDefense, DreamingPearlCourtesanForm,
+        FlurryOfAugustLeaves, VindictiveConcubinesPillowBook, FragmentPetalFascinationKata, SevenStormsEscapePrana, InvokingTheChimerasCoils
+      )
+
       case object DemureCarpFeint extends MartialArtsCharm {
         override def charmType: CharmType = Reflexive
 

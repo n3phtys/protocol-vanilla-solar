@@ -84,6 +84,14 @@ object Abilities {
       }.map(s => s.abilities.map(a => ratings.mapValues(c => c.number).getOrElse(a, 0)).sum)
     }
 
+    def getTypeForAbility(category : String) : Option[Type] = {
+      abilities.find {
+        case s: SingleAbility => s.ability.name.equalsIgnoreCase(category)
+        case d: DuoAbilityGroup => d.abilityA.name.equalsIgnoreCase(category) || d.abilityB.name.equalsIgnoreCase(category)
+        case f: AbilityFamily => f.name.equalsIgnoreCase(category) || f.instances.exists(_.name.equalsIgnoreCase(category))
+      }.map(s => types.getOrElse(s, Normal))
+    }
+
     def addSpecialty(specialtyAble: AbilityLikeSpecialtyAble, title : String) : AbilityMatrix = copy(specialties = specialties.+((specialtyAble, specialties.getOrElse(specialtyAble, Set.empty).+(Specialty(title)))))
 
     def removeSpecialty(specialtyAble: AbilityLikeSpecialtyAble, title : String) : AbilityMatrix = copy(specialties = specialties.+((specialtyAble, specialties.getOrElse(specialtyAble, Set.empty).-(Specialty(title)))))

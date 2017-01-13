@@ -83,6 +83,10 @@ with CharmLearnable{
   private def canCastSolarCircle : Boolean = ???
 
   override def has(charm: CharmRef): Boolean = charms.contains(charm)
+
+  override def reducedCost(abilityName: String): Boolean = abilities.getTypeForAbility(abilityName).exists(a => a != Abilities.Normal)
+
+  override def ignoreEssence(abilityName: String): Boolean = abilities.getTypeForAbility(abilityName).exists(a => a == Abilities.Supernal)
 }
 
 
@@ -94,6 +98,8 @@ trait Essencable {
 
 trait Abilitable {
   def abilityRating(abilityName : String) : Option[Int]
+  def reducedCost(abilityName : String) : Boolean
+  def ignoreEssence(abilityName : String) : Boolean
 }
 
 trait Attributable {

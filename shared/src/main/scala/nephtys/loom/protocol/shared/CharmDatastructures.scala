@@ -1,10 +1,14 @@
 package nephtys.loom.protocol.shared
 
+import scala.scalajs.js.annotation.{JSExport, JSExportAll}
+
 /**
   * Created by Christopher on 12.01.2017.
   */
+@JSExportAll
 object CharmDatastructures {
 
+  @JSExportAll
   sealed abstract class EssenceDots(val dots : Int)
   case object Essence1 extends EssenceDots(1)
   case object Essence2 extends EssenceDots(2)
@@ -20,6 +24,7 @@ object CharmDatastructures {
   }
 
 
+  @JSExportAll
  final case class Ability(ability: String, dots : Int)
 
   sealed trait CharmType
