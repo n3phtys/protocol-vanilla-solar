@@ -1,5 +1,7 @@
 package nephtys.loom.protocol.shared
 
+import nephtys.loom.protocol.shared.Powers.Spells.TerrestrialCircle
+
 import scala.scalajs.js.annotation.{JSExport, JSExportAll}
 
 /**
@@ -33,5 +35,12 @@ object CharmDatastructures {
   case object Permanent extends CharmType
   case object Reflexive extends CharmType
   case object Special extends CharmType
+
+
+  sealed abstract class Circle(val essence : Int)
+  val circles : Seq[Circle] = Seq(Terrestrial, Celestial, Solar)
+  case object Terrestrial extends Circle(1)
+  case object Celestial extends Circle(3)
+  case object Solar extends Circle(5)
 
 }

@@ -1,10 +1,10 @@
 package nephtys.loom.protocol.vanilla.solar
-import nephtys.loom.protocol.shared.CharmRef
+import nephtys.loom.protocol.shared.{CharmRef, CustomPowers, Powers}
 import nephtys.loom.protocol.vanilla.solar.Equipments.Equipment
 import nephtys.loom.protocol.vanilla.solar.Merits.Merit
 import nephtys.loom.protocol.vanilla.solar.Misc._
 import org.nephtys.loom.generic.protocol.Aggregate
-import org.nephtys.loom.generic.protocol.InternalStructures.{Email, ID, IDable}
+import org.nephtys.loom.generic.protocol.InternalStructures.{Email, ID, IDable, MetaInfo}
 
 import scala.scalajs.js.annotation.{JSExport, JSExportAll}
 import scala.util.Try
@@ -15,9 +15,7 @@ import scala.util.Try
 @JSExport
 @JSExportAll
 final case class Solar(
-                      owner : Email, //TODO: needs command/event
-                      readers : Set[Email], //TODO: needs command/event
-                      public : Boolean,
+                      metainfo : MetaInfo,
                       id : ID[Solar],
                       stillInCharGen  : Boolean,
                       bonusPointsUnspent : Int, //TODO: needs command/event
@@ -42,7 +40,9 @@ final case class Solar(
 
                       intimacies : Map[String, Intimacies.Intensity], //TODO: needs command/event
 
-                      charms : List[CharmRef],  //TODO: needs command/event
+                      listedCharms : Set[Int], //todo: type = Powers.Power with Product with Serializable
+                      customCharms : Seq[CustomPowers.CustomPower],
+
 
                       notes : List[String]
 
@@ -82,11 +82,17 @@ with CharmLearnable{
   //todo: check if celestial circle charm was bought and essence >= 5 (yes, that one!)
   private def canCastSolarCircle : Boolean = ???
 
-  override def has(charm: CharmRef): Boolean = charms.contains(charm)
+  override def has(charm: Powers.Power with Product with Serializable): Boolean = ??? // listedCharms.contains(charm)
 
   override def reducedCost(abilityName: String): Boolean = abilities.getTypeForAbility(abilityName).exists(a => a != Abilities.Normal)
 
   override def ignoreEssence(abilityName: String): Boolean = abilities.getTypeForAbility(abilityName).exists(a => a == Abilities.Supernal)
+
+  override val owner: Email = metainfo.owner
+
+  override val public: Boolean = metainfo.public
+
+  override val readers: Set[Email] = metainfo.readers
 }
 
 
@@ -109,7 +115,7 @@ trait Attributable {
 trait Learnable {
   def canLearn(ct : CharmType) : Boolean
 
-  def has(charm : CharmRef) : Boolean
+  def has(charm : Powers.Power with Product with Serializable) : Boolean
 }
 
 sealed trait CharmType

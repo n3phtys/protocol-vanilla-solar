@@ -15,17 +15,17 @@ object Powers {
   @JSExportAll
   sealed trait Power {
     def essence : EssenceDots
-    val essenceInt : Int = essence.dots
+    def essenceInt : Int = essence.dots
 
     def keywords : Set[String]
-    def prerequisite : Set[Power]
+    def cost : String
+    def duration : String
+    def prerequisite : Set[Power with Product with Serializable]
   }
 
   @JSExportAll
   sealed trait Charm extends Power {
     def charmType : CharmType
-    def duration : String
-    def cost : String
   }
 
   @JSExportAll
@@ -57,7 +57,7 @@ object Powers {
 
          override def keywords: Set[String] = Set.empty
 
-         override def prerequisite: Set[Power] = Set.empty
+         override def prerequisite: Set[Power with Product with Serializable] = Set.empty
        }
        case object SpiritCuttingAttack extends SolarCharm {
          override def abilityRequirement: Ability = Ability("Occult", 2)
@@ -72,7 +72,7 @@ object Powers {
 
          override def keywords: Set[String] = Set("Uniform")
 
-         override def prerequisite: Set[Power] = Set(SpiritDetectingGlance)
+         override def prerequisite: Set[Power with Product with Serializable] = Set(SpiritDetectingGlance)
        }
        case object SpiritDrainingStance extends SolarCharm {
          override def abilityRequirement: Ability = Ability("Occult", 3)
@@ -87,7 +87,7 @@ object Powers {
 
          override def keywords: Set[String] = Set.empty
 
-         override def prerequisite: Set[Power] = Set(SpiritCuttingAttack)
+         override def prerequisite: Set[Power with Product with Serializable] = Set(SpiritCuttingAttack)
        }
        case object UncannyPerceptionTechnique extends SolarCharm {
          override def abilityRequirement: Ability = Ability("Occult", 2)
@@ -102,7 +102,7 @@ object Powers {
 
          override def keywords: Set[String] = Set.empty
 
-         override def prerequisite: Set[Power] = Set(SpiritDetectingGlance)
+         override def prerequisite: Set[Power with Product with Serializable] = Set(SpiritDetectingGlance)
        }
        case object KeenUnnaturalEye extends SolarCharm {
          override def abilityRequirement: Ability = Ability("Occult", 3)
@@ -117,7 +117,7 @@ object Powers {
 
          override def keywords: Set[String] = Set.empty
 
-         override def prerequisite: Set[Power] = Set(UncannyPerceptionTechnique)
+         override def prerequisite: Set[Power with Product with Serializable] = Set(UncannyPerceptionTechnique)
        }
 
 
@@ -135,7 +135,7 @@ object Powers {
 
          override def keywords: Set[String] = Set.empty
 
-         override def prerequisite: Set[Power] = Set.empty
+         override def prerequisite: Set[Power with Product with Serializable] = Set.empty
 
            override def charmType: CharmType = Permanent
 
@@ -150,7 +150,7 @@ object Powers {
 
            override def keywords: Set[String] = Set.empty
 
-           override def prerequisite: Set[Power] = Set(TerrestrialCircleSorcery)
+           override def prerequisite: Set[Power with Product with Serializable] = Set(TerrestrialCircleSorcery)
 
            override def charmType: CharmType = Permanent
 
@@ -165,7 +165,7 @@ object Powers {
 
            override def keywords: Set[String] = Set.empty
 
-           override def prerequisite: Set[Power] = Set(CelestialCircleSorcery)
+           override def prerequisite: Set[Power with Product with Serializable] = Set(CelestialCircleSorcery)
 
            override def charmType: CharmType = Permanent
 
@@ -186,7 +186,7 @@ object Powers {
     sealed trait Spell extends Power {
       def shapingMoteCost : Int
       def willpowerCost : Int
-      def duration : String
+      def cost : String = s"$shapingMoteCost sm, $willpowerCost wp"
     }
 
     @JSExportAll
@@ -195,7 +195,7 @@ object Powers {
 
       sealed trait TerrestrialCircleSpell extends Spell {
         override def willpowerCost = 2
-        override def prerequisite: Set[Power] = Set.empty
+        override def prerequisite: Set[Power with Product with Serializable] = Set.empty
         override def essence = Essence1
       }
 
@@ -287,7 +287,7 @@ object Powers {
 
           override def keywords: Set[String] = Set("Decisive-only")
 
-          override def prerequisite: Set[Power] = Set.empty
+          override def prerequisite: Set[Power with Product with Serializable] = Set.empty
         }
         case object NoOtherBlade extends Evo {
           override def charmType: CharmType = Supplemental
@@ -300,7 +300,7 @@ object Powers {
 
           override def keywords: Set[String] = Set("Uniform")
 
-          override def prerequisite: Set[Power] = Set(HeartKnowingBlade)
+          override def prerequisite: Set[Power with Product with Serializable] = Set(HeartKnowingBlade)
         }
         case object MagnanimousSunfireBlast extends Evo {
           override def charmType: CharmType = Reflexive
@@ -313,7 +313,7 @@ object Powers {
 
           override def keywords: Set[String] = Set("Decisive-only")
 
-          override def prerequisite: Set[Power] = Set(HeartKnowingBlade)
+          override def prerequisite: Set[Power with Product with Serializable] = Set(HeartKnowingBlade)
         }
         case object HolyMiracleStrike extends Evo {
           override def charmType: CharmType = Simple
@@ -326,7 +326,7 @@ object Powers {
 
           override def keywords: Set[String] = Set("Uniform")
 
-          override def prerequisite: Set[Power] = Set(HeartKnowingBlade)
+          override def prerequisite: Set[Power with Product with Serializable] = Set(HeartKnowingBlade)
         }
         case object BattleDanceOfTheWarriorWed extends Evo {
           override def charmType: CharmType = Reflexive
@@ -339,7 +339,7 @@ object Powers {
 
           override def keywords: Set[String] = Set("Uniform")
 
-          override def prerequisite: Set[Power] = Set(HolyMiracleStrike, MagnanimousSunfireBlast, NoOtherBlade)
+          override def prerequisite: Set[Power with Product with Serializable] = Set(HolyMiracleStrike, MagnanimousSunfireBlast, NoOtherBlade)
         }
       }
   }
@@ -350,7 +350,7 @@ object Powers {
 
     @JSExportAll
     sealed trait EclipseCharm extends Charm {
-      override def prerequisite: Set[Power] = Set.empty
+      override def prerequisite: Set[Power with Product with Serializable] = Set.empty
     }
 
     case object SeductiveShapechange extends EclipseCharm {
@@ -416,7 +416,7 @@ object Powers {
 
         override def keywords: Set[String] = Set("Mastery", "Uniform")
 
-        override def prerequisite: Set[Power] = Set.empty
+        override def prerequisite: Set[Power with Product with Serializable] = Set.empty
 
         override def martialArtsDotsRequired: Int = 3
       }
@@ -433,7 +433,7 @@ object Powers {
 
         override def keywords: Set[String] = Set("Dual", "Mastery")
 
-        override def prerequisite: Set[Power] = Set.empty
+        override def prerequisite: Set[Power with Product with Serializable] = Set.empty
       }
       case object PearlescentFiligreeDefense extends MartialArtsCharm {
         override def charmType: CharmType = Reflexive
@@ -446,7 +446,7 @@ object Powers {
 
         override def keywords: Set[String] = Set("Mastery")
 
-        override def prerequisite: Set[Power] = Set.empty
+        override def prerequisite: Set[Power with Product with Serializable] = Set.empty
 
         override def martialArtsDotsRequired: Int = 2
       }
@@ -463,7 +463,7 @@ object Powers {
 
         override def keywords: Set[String] = Set("Form")
 
-        override def prerequisite: Set[Power] = Set(DemureCarpFeint, ElegantWeaponRepertoire, PearlescentFiligreeDefense)
+        override def prerequisite: Set[Power with Product with Serializable] = Set(DemureCarpFeint, ElegantWeaponRepertoire, PearlescentFiligreeDefense)
       }
       case object FlurryOfAugustLeaves extends MartialArtsCharm {
         override def martialArtsDotsRequired: Int = 4
@@ -478,7 +478,7 @@ object Powers {
 
         override def keywords: Set[String] = Set("Decisive-only")
 
-        override def prerequisite: Set[Power] = Set(DreamingPearlCourtesanForm)
+        override def prerequisite: Set[Power with Product with Serializable] = Set(DreamingPearlCourtesanForm)
       }
       case object VindictiveConcubinesPillowBook extends MartialArtsCharm {
         override def martialArtsDotsRequired: Int = 5
@@ -493,7 +493,7 @@ object Powers {
 
         override def keywords: Set[String] = Set("Decisive-only", "Terrestrial")
 
-        override def prerequisite: Set[Power] = Set(FlurryOfAugustLeaves)
+        override def prerequisite: Set[Power with Product with Serializable] = Set(FlurryOfAugustLeaves)
       }
       case object FragmentPetalFascinationKata extends MartialArtsCharm {
         override def martialArtsDotsRequired: Int = 4
@@ -508,7 +508,7 @@ object Powers {
 
         override def keywords: Set[String] = Set.empty
 
-        override def prerequisite: Set[Power] = Set(DreamingPearlCourtesanForm)
+        override def prerequisite: Set[Power with Product with Serializable] = Set(DreamingPearlCourtesanForm)
       }
       case object SevenStormsEscapePrana extends MartialArtsCharm {
         override def martialArtsDotsRequired: Int = 4
@@ -523,7 +523,7 @@ object Powers {
 
         override def keywords: Set[String] = Set("Mastery")
 
-        override def prerequisite: Set[Power] = Set(FragmentPetalFascinationKata)
+        override def prerequisite: Set[Power with Product with Serializable] = Set(FragmentPetalFascinationKata)
       }
       case object InvokingTheChimerasCoils extends MartialArtsCharm {
         override def martialArtsDotsRequired: Int = 5
@@ -538,7 +538,7 @@ object Powers {
 
         override def keywords: Set[String] = Set("Mastery", "Terrestrial")
 
-        override def prerequisite: Set[Power] = Set(SevenStormsEscapePrana, VindictiveConcubinesPillowBook)
+        override def prerequisite: Set[Power with Product with Serializable] = Set(SevenStormsEscapePrana, VindictiveConcubinesPillowBook)
       }
 
     }

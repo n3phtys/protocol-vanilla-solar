@@ -178,7 +178,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class OwnerChanged(id : Id, owner : Email) extends SolarEvent {
-    override def commitInternal(old: EventInput): Solar = old.get[Solar].copy(owner = owner)
+    override def commitInternal(old: EventInput): Solar = old.get[Solar].copy(metainfo = old.get[Solar].metainfo.copy( owner = owner))
   }
 
   case class SetReaders(id : Id, readers : Set[Email]) extends SolarCommand {
@@ -186,7 +186,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class ReadersChanged(id : Id, readers : Set[Email]) extends SolarEvent {
-    override def commitInternal(old: EventInput): Solar = old.get[Solar].copy(readers = readers)
+    override def commitInternal(old: EventInput): Solar = old.get[Solar].copy(metainfo = old.get[Solar].metainfo.copy( readers = readers))
   }
 
   case class SetPublic(id : Id, public : Boolean) extends SolarCommand {
@@ -194,7 +194,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class MadePublic(id : Id, public : Boolean) extends SolarEvent {
-    override def commitInternal(old: EventInput): Solar = old.get[Solar].copy(public = public)
+    override def commitInternal(old: EventInput): Solar = old.get[Solar].copy(metainfo = old.get[Solar].metainfo.copy( public = public))
   }
 
 
