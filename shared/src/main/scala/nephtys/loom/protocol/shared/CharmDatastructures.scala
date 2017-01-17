@@ -35,10 +35,11 @@ object CharmDatastructures {
   case object Permanent extends CharmType
   case object Reflexive extends CharmType
   case object Special extends CharmType
+  val CharmTypes : Map[String, CharmType] = Seq(Supplemental, Simple, Permanent, Reflexive, Special).map(s => (s.toString, s)).toMap
 
 
   sealed abstract class Circle(val essence : Int)
-  val circles : Seq[Circle] = Seq(Terrestrial, Celestial, Solar)
+  val Circles : Map[String, Circle] = Seq(Terrestrial, Celestial, Solar).map(s => (s.toString, s)).toMap
   case object Terrestrial extends Circle(1)
   case object Celestial extends Circle(3)
   case object Solar extends Circle(5)
