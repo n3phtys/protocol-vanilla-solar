@@ -1,4 +1,5 @@
 package nephtys.loom.protocol.vanilla.solar
+import nephtys.loom.protocol.shared.CustomPowers.FreePointCost
 import nephtys.loom.protocol.shared._
 import nephtys.loom.protocol.vanilla.solar.Equipments.Equipment
 import nephtys.loom.protocol.vanilla.solar.Merits.Merit
@@ -46,8 +47,7 @@ final case class Solar(
 
                       intimacies : Map[String, Intimacies.Intensity], //TODO: needs command/event
 
-                      //listedCharms : Set[Charm], //todo: type = Powers.Power with Product with Serializable
-                      //listedSpells : Set[Spell],
+                      listedPowers : Set[Int],
                       customCharms : Seq[CustomPowers.CustomPower],
 
 
@@ -62,6 +62,11 @@ with CharmLearnable{
     Experiences.spentXPtoEssenceLevel(experience.generalXP.spent)
   }
 
+
+  def countCharmPurchases: Int = listedPowers.size + customCharms.map(a => a.customCost match {
+    case FreePointCost(i) => i
+    case _ => 0
+  }).sum
 
 
   override def abilityRating(abilityName: String): Option[Int] = abilities.getRatingForCharms(abilityName)

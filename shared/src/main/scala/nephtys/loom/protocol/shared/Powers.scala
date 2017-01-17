@@ -92,6 +92,11 @@ sealed trait SolarCircleSpell extends Spell {
 @JSExportAll
 object Powers {
 
+  val powers : IndexedSeq[Power with Product with Serializable] = (
+    SolarCharms.solarCharms ++ EclipseCharms.eclipseCharms ++ MartialArtsCharms.martialArtsCharms ++ Evocations.evocations ++ Spells.spells
+    ).toIndexedSeq
+  val powersIndexMap : Map[Power with Product with Serializable, Int] = powers.zipWithIndex.toMap
+
   @JSExportAll
   object SolarCharms {
 

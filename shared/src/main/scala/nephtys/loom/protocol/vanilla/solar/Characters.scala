@@ -20,8 +20,7 @@ object Characters {
     willpowerDots = 5, essenceCommitted =  0,
     experience = Experiences.emptyBox,
     equipment = Equipments.emptyEquipmentList, intimacies = Map.empty[String, Intimacies.Intensity],
-    //listedCharms = Set.empty,
-    //listedSpells = Set.empty,
+    listedPowers = Set.empty,
     customCharms = Seq.empty,
     notes =  List.empty[String]
   )

@@ -28,12 +28,14 @@ object CustomPowers {
     val cost : String
     val duration : String
     val keyword : Set[String]
+
+    val customCost : CustomCost
   }
 
   @JSExportAll
   final case class CustomSolarCharm(essence : Int, ability : String, abilityRating : Int,
     charmtype : CharmType, name: String, description: String, cost: String,
-                                    keyword: Set[String], duration: String
+                                    keyword: Set[String], duration: String, customCost : CustomCost
 
                                    ) extends CustomPower {
   }
@@ -41,7 +43,7 @@ object CustomPowers {
   @JSExportAll
   final case class CustomEvocation(essence : Int, charmtype : CharmType,
                                    name: String, description: String,
-                                   cost: String, keyword: Set[String],  duration: String
+                                   cost: String, keyword: Set[String],  duration: String, customCost : CustomCost
                                   ) extends CustomPower {
 
   }
@@ -49,7 +51,7 @@ object CustomPowers {
   @JSExportAll
   final case class CustomSpell(circle : CharmDatastructures.Circle, name: String,
                                description: String, cost: String, keyword: Set[String],
-                               duration: String
+                               duration: String, customCost : CustomCost
                               ) extends CustomPower {
     override def essence: Int = circle.essence
   }
