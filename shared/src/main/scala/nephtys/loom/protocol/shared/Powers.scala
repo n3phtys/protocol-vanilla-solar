@@ -11,16 +11,20 @@ import upickle.default._
 
 
 
+@JSExportAll
+sealed trait HasPrerequisite {
+  def prerequisite : Set[Power with Product with Serializable]
+}
 
 @JSExportAll
-sealed trait Power {
+sealed trait Power extends HasPrerequisite{
   def essence : EssenceDots
   def essenceInt : Int = essence.dots
 
   def keywords : Set[String]
   def cost : String
   def duration : String
-  def prerequisite : Set[Power with Product with Serializable]
+
 }
 
 @JSExportAll
@@ -568,8 +572,9 @@ object Powers {
   }
 
 
+  val x : Seq[Charm] = Seq(InvokingTheChimerasCoils, SevenStormsEscapePrana)
 
-  write(InvokingTheChimerasCoils)
+  write(x)
   //println(s"SolarCharms serialized: ${
   //}")
 }

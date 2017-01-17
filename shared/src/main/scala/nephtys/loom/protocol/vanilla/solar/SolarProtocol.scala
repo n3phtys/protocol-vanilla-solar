@@ -68,7 +68,8 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   case class NameChanged(id : Id, name : String) extends SolarEvent {
     override def commitInternal(old: EventInput): Solar = {
       println("Commiting SetName Event internally")
-      old.get[Solar].copy(name = name)
+      val metaDescriptors = old.get[Solar].metaDescriptors.copy(name = name)
+      old.get[Solar].copy(metaDescriptors = metaDescriptors)
     }
   }
 
@@ -129,7 +130,11 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class AnimaChanged(id : Id, anima : String) extends SolarEvent {
-    override def commitInternal(old: EventInput): Solar = old.get[Solar].copy(anima = anima)
+    override def commitInternal(old: EventInput): Solar = {
+
+      val metaDescriptors = old.get[Solar].metaDescriptors.copy(anima = anima)
+      old.get[Solar].copy(metaDescriptors = metaDescriptors)
+    }
   }
 
   case class SetConcept(id : Id, concept : String) extends SolarCommand {
@@ -137,7 +142,11 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class ConceptChanged(id : Id, concept : String) extends SolarEvent {
-    override def commitInternal(old: EventInput): Solar = old.get[Solar].copy(concept = concept)
+    override def commitInternal(old: EventInput): Solar = {
+
+      val metaDescriptors = old.get[Solar].metaDescriptors.copy(concept = concept)
+      old.get[Solar].copy(metaDescriptors = metaDescriptors)
+    }
   }
 
   case class SetLimitTrigger(id : Id, limitTrigger : String) extends SolarCommand {
@@ -145,7 +154,11 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class LimitTriggerChanged(id : Id, limitTrigger : String) extends SolarEvent {
-    override def commitInternal(old: EventInput): Solar = old.get[Solar].copy(limitTrigger = limitTrigger)
+    override def commitInternal(old: EventInput): Solar = {
+
+      val metaDescriptors = old.get[Solar].metaDescriptors.copy(limitTrigger = limitTrigger)
+      old.get[Solar].copy(metaDescriptors = metaDescriptors)
+    }
   }
 
   case class SetPlayer(id : Id, player : String) extends SolarCommand {
@@ -153,7 +166,10 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class PlayerChanged(id : Id, player : String) extends SolarEvent {
-    override def commitInternal(old: EventInput): Solar = old.get[Solar].copy(player = player)
+    override def commitInternal(old: EventInput): Solar = {
+      val metaDescriptors = old.get[Solar].metaDescriptors.copy(player = player)
+      old.get[Solar].copy(metaDescriptors = metaDescriptors)
+    }
   }
 
   case class LeaveCharacterGeneration(id : Id) extends SolarCommand {
@@ -178,7 +194,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class OwnerChanged(id : Id, owner : Email) extends SolarEvent {
-    override def commitInternal(old: EventInput): Solar = old.get[Solar].copy(metainfo = old.get[Solar].metainfo.copy( owner = owner))
+    override def commitInternal(old: EventInput): Solar = old.get[Solar].copy(metaInfo = old.get[Solar].metaInfo.copy( owner = owner))
   }
 
   case class SetReaders(id : Id, readers : Set[Email]) extends SolarCommand {
@@ -186,7 +202,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class ReadersChanged(id : Id, readers : Set[Email]) extends SolarEvent {
-    override def commitInternal(old: EventInput): Solar = old.get[Solar].copy(metainfo = old.get[Solar].metainfo.copy( readers = readers))
+    override def commitInternal(old: EventInput): Solar = old.get[Solar].copy(metaInfo = old.get[Solar].metaInfo.copy( readers = readers))
   }
 
   case class SetPublic(id : Id, public : Boolean) extends SolarCommand {
@@ -194,7 +210,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class MadePublic(id : Id, public : Boolean) extends SolarEvent {
-    override def commitInternal(old: EventInput): Solar = old.get[Solar].copy(metainfo = old.get[Solar].metainfo.copy( public = public))
+    override def commitInternal(old: EventInput): Solar = old.get[Solar].copy(metaInfo = old.get[Solar].metaInfo.copy( public = public))
   }
 
 

@@ -1,5 +1,5 @@
 package nephtys.loom.protocol.vanilla.solar
-import nephtys.loom.protocol.shared.{CharmRef, CustomPowers, Power, Powers}
+import nephtys.loom.protocol.shared._
 import nephtys.loom.protocol.vanilla.solar.Equipments.Equipment
 import nephtys.loom.protocol.vanilla.solar.Merits.Merit
 import nephtys.loom.protocol.vanilla.solar.Misc._
@@ -9,21 +9,28 @@ import org.nephtys.loom.generic.protocol.InternalStructures.{Email, ID, IDable, 
 import scala.scalajs.js.annotation.{JSExport, JSExportAll}
 import scala.util.Try
 
+@JSExport
+@JSExportAll
+final case class NamedSolarMetaDescriptors(name : String,
+                                           concept : String, //TODO: needs command/event
+                                           player : String, //TODO: needs command/event
+                                           anima : String, //TODO: needs command/event
+                                           limitTrigger: String)
+
+
 /**
   * Created by nephtys on 12/7/16.
   */
 @JSExport
 @JSExportAll
 final case class Solar(
-                      metainfo : MetaInfo,
+                      metaInfo : MetaInfo,
                       id : ID[Solar],
                       stillInCharGen  : Boolean,
                       bonusPointsUnspent : Int, //TODO: needs command/event
 
-                      name : String,
-                      concept : String, //TODO: needs command/event
-                      player : String, //TODO: needs command/event
-                      anima : String, //TODO: needs command/event
+                      metaDescriptors: NamedSolarMetaDescriptors,  //TODO: needs command/event
+
                       caste : Option[Caste], //TODO: needs command/event
 
                       attributes : Attributes.AttributeBlock, //TODO: needs command/event
@@ -32,7 +39,6 @@ final case class Solar(
 
                       willpowerDots : Int,  //TODO: needs command/event
                       essenceCommitted : Int,  //TODO: needs command/event
-                      limitTrigger: String,  //TODO: needs command/event
 
                       experience : Experiences.ExperienceBox, //TODO: needs command/event
 
@@ -40,7 +46,8 @@ final case class Solar(
 
                       intimacies : Map[String, Intimacies.Intensity], //TODO: needs command/event
 
-                      listedCharms : Set[Int], //todo: type = Powers.Power with Product with Serializable
+                      //listedCharms : Set[Charm], //todo: type = Powers.Power with Product with Serializable
+                      //listedSpells : Set[Spell],
                       customCharms : Seq[CustomPowers.CustomPower],
 
 
@@ -88,11 +95,6 @@ with CharmLearnable{
 
   override def ignoreEssence(abilityName: String): Boolean = abilities.getTypeForAbility(abilityName).exists(a => a == Abilities.Supernal)
 
-  override val owner: Email = metainfo.owner
-
-  override val public: Boolean = metainfo.public
-
-  override val readers: Set[Email] = metainfo.readers
 }
 
 
