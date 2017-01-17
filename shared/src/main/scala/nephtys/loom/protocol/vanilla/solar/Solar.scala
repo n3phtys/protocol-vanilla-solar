@@ -1,5 +1,5 @@
 package nephtys.loom.protocol.vanilla.solar
-import nephtys.loom.protocol.shared.{CharmRef, CustomPowers, Powers}
+import nephtys.loom.protocol.shared.{CharmRef, CustomPowers, Power, Powers}
 import nephtys.loom.protocol.vanilla.solar.Equipments.Equipment
 import nephtys.loom.protocol.vanilla.solar.Merits.Merit
 import nephtys.loom.protocol.vanilla.solar.Misc._
@@ -82,7 +82,7 @@ with CharmLearnable{
   //todo: check if celestial circle charm was bought and essence >= 5 (yes, that one!)
   private def canCastSolarCircle : Boolean = ???
 
-  override def has(charm: Powers.Power with Product with Serializable): Boolean = ??? // listedCharms.contains(charm)
+  override def has(charm: Power with Product with Serializable): Boolean = ??? // listedCharms.contains(charm)
 
   override def reducedCost(abilityName: String): Boolean = abilities.getTypeForAbility(abilityName).exists(a => a != Abilities.Normal)
 
@@ -115,7 +115,7 @@ trait Attributable {
 trait Learnable {
   def canLearn(ct : CharmType) : Boolean
 
-  def has(charm : Powers.Power with Product with Serializable) : Boolean
+  def has(charm : Power with Product with Serializable) : Boolean
 }
 
 sealed trait CharmType

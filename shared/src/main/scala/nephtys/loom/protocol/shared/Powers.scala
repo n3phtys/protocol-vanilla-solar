@@ -2,9 +2,85 @@ package nephtys.loom.protocol.shared
 
 import nephtys.loom.protocol.shared.CharmDatastructures._
 import nephtys.loom.protocol.shared.Powers.Evocations.BelovedAdorei.Evo
+import nephtys.loom.protocol.shared.Powers.MartialArtsCharms.DreamingPearlCourtesanStyle.{InvokingTheChimerasCoils, SevenStormsEscapePrana}
 import nephtys.loom.protocol.shared.Powers.SolarCharms.Occult.Sorcery.{CelestialCircleSorcery, TerrestrialCircleSorcery}
 
-import scala.scalajs.js.annotation.JSExportAll
+import scala.scalajs.js.annotation.{JSExport, JSExportAll}
+import upickle.default._
+
+
+
+
+
+@JSExportAll
+sealed trait Power {
+  def essence : EssenceDots
+  def essenceInt : Int = essence.dots
+
+  def keywords : Set[String]
+  def cost : String
+  def duration : String
+  def prerequisite : Set[Power with Product with Serializable]
+}
+
+@JSExportAll
+sealed trait Charm extends Power {
+  def charmType : CharmType
+}
+
+@JSExportAll
+sealed trait MartialArtsCharm extends Charm {
+  def martialArtsDotsRequired : Int
+}
+
+@JSExportAll
+sealed trait EclipseCharm extends Charm {
+  override def prerequisite: Set[Power with Product with Serializable] = Set.empty
+}
+
+
+@JSExportAll
+sealed trait Evocation extends Charm {
+  def artifactName : String
+
+}
+
+@JSExportAll
+sealed trait SolarCharm extends Charm {
+  def abilityRequirement : Ability
+  val abilityString : String = abilityRequirement.ability
+  val abilityInt : Int = abilityRequirement.dots
+}
+
+@JSExportAll
+sealed trait Spell extends Power {
+  def shapingMoteCost : Int
+  def willpowerCost : Int
+  def cost : String = s"$shapingMoteCost sm, $willpowerCost wp"
+}
+
+
+
+@JSExportAll
+sealed trait TerrestrialCircleSpell extends Spell {
+  override def willpowerCost = 2
+  override def prerequisite: Set[Power with Product with Serializable] = Set.empty
+  override def essence = Essence1
+}
+
+@JSExportAll
+sealed trait CelestialCircleSpell extends Spell {
+  override def willpowerCost = 2
+  override def prerequisite = Set(TerrestrialCircleSorcery)
+  override def essence = Essence3
+}
+
+@JSExportAll
+sealed trait SolarCircleSpell extends Spell {
+  override def willpowerCost = 3
+  override def prerequisite = Set(CelestialCircleSorcery)
+  override def essence = Essence5
+}
 
 /**
   * Created by Christopher on 12.01.2017.
@@ -13,32 +89,11 @@ import scala.scalajs.js.annotation.JSExportAll
 object Powers {
 
   @JSExportAll
-  sealed trait Power {
-    def essence : EssenceDots
-    def essenceInt : Int = essence.dots
-
-    def keywords : Set[String]
-    def cost : String
-    def duration : String
-    def prerequisite : Set[Power with Product with Serializable]
-  }
-
-  @JSExportAll
-  sealed trait Charm extends Power {
-    def charmType : CharmType
-  }
-
-  @JSExportAll
   object SolarCharms {
 
     def solarCharms: Seq[SolarCharm with Product with Serializable] = Occult.occultCharms
 
-    @JSExportAll
-    sealed trait SolarCharm extends Charm {
-      def abilityRequirement : Ability
-      val abilityString : String = abilityRequirement.ability
-      val abilityInt : Int = abilityRequirement.dots
-    }
+
     @JSExportAll
      object Occult {
 
@@ -182,22 +237,12 @@ object Powers {
   object Spells {
     def spells: Seq[Spell with Product with Serializable] = TerrestrialCircle.terrestrialCircleSpells ++ CelestialCircle.celestialCircleSpells ++ SolarCircle.solarCircleSpells
 
-    @JSExportAll
-    sealed trait Spell extends Power {
-      def shapingMoteCost : Int
-      def willpowerCost : Int
-      def cost : String = s"$shapingMoteCost sm, $willpowerCost wp"
-    }
+
 
     @JSExportAll
     object TerrestrialCircle {
       def terrestrialCircleSpells: Seq[TerrestrialCircleSpell with Product with Serializable]  = Seq()
 
-      sealed trait TerrestrialCircleSpell extends Spell {
-        override def willpowerCost = 2
-        override def prerequisite: Set[Power with Product with Serializable] = Set.empty
-        override def essence = Essence1
-      }
 
 
 
@@ -207,22 +252,12 @@ object Powers {
     object CelestialCircle {
       def celestialCircleSpells: Seq[CelestialCircleSpell with Product with Serializable]  = Seq()
 
-      sealed trait CelestialCircleSpell extends Spell {
-        override def willpowerCost = 2
-        override def prerequisite = Set(TerrestrialCircleSorcery)
-        override def essence = Essence3
-      }
     }
 
     @JSExportAll
     object SolarCircle {
       def solarCircleSpells: Seq[SolarCircleSpell with Product with Serializable] = Seq(BenedictionOfArchgenesis, DeathRay, DemonOfTheThirdCircle, RainOfDoom)
 
-      sealed trait SolarCircleSpell extends Spell {
-        override def willpowerCost = 3
-        override def prerequisite = Set(CelestialCircleSorcery)
-        override def essence = Essence5
-      }
 
       case object BenedictionOfArchgenesis extends SolarCircleSpell {
         override def shapingMoteCost: Int = 0
@@ -264,10 +299,6 @@ object Powers {
   object Evocations {
     def evocations: Seq[Evocation with Product with Serializable] = BelovedAdorei.evocations
 
-    sealed trait Evocation extends Charm {
-        def artifactName : String
-
-      }
 
     @JSExportAll
       object BelovedAdorei {
@@ -348,10 +379,6 @@ object Powers {
   object EclipseCharms {
     def eclipseCharms = Seq(SeductiveShapechange, NightBlackCarapace, StormStirringLash)
 
-    @JSExportAll
-    sealed trait EclipseCharm extends Charm {
-      override def prerequisite: Set[Power with Product with Serializable] = Set.empty
-    }
 
     case object SeductiveShapechange extends EclipseCharm {
       override def charmType: CharmType = Simple
@@ -394,10 +421,6 @@ object Powers {
   object MartialArtsCharms {
     def martialArtsCharms: Seq[MartialArtsCharm with Product with Serializable] = DreamingPearlCourtesanStyle.charms
 
-    @JSExportAll
-    sealed trait MartialArtsCharm extends Charm {
-      def martialArtsDotsRequired : Int
-    }
 
     @JSExportAll
     object DreamingPearlCourtesanStyle {
@@ -544,4 +567,10 @@ object Powers {
     }
   }
 
+
+
+  write(InvokingTheChimerasCoils)
+  //println(s"SolarCharms serialized: ${
+  //}")
 }
+
