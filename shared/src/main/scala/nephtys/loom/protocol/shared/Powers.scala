@@ -44,7 +44,7 @@ sealed trait EclipseCharm extends Charm {
 
 
 @JSExportAll
-sealed trait Evocation extends Charm {
+sealed trait EvocationCharm extends Charm {
   def artifactName : String
 
 }
@@ -306,14 +306,14 @@ object Powers {
 
   @JSExportAll
   object Evocations {
-    def evocations: Seq[Evocation with Product with Serializable] = BelovedAdorei.evocations
+    def evocations: Seq[EvocationCharm with Product with Serializable] = BelovedAdorei.evocations
 
 
     @JSExportAll
       object BelovedAdorei {
         def evocations = Seq(HeartKnowingBlade, NoOtherBlade, MagnanimousSunfireBlast, HolyMiracleStrike, BattleDanceOfTheWarriorWed)
 
-        sealed trait Evo extends Evocation{
+        sealed trait Evo extends EvocationCharm{
           override def artifactName = "Beloved Adorei"
         }
         case object HeartKnowingBlade extends Evo {

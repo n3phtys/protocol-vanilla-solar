@@ -75,15 +75,15 @@ with CharmLearnable{
 
 
   override def canLearn(ct: CharmType): Boolean = ct match {
-    case SiderealMartialArts => true
-    case MartialArts => true
-    case EclipseCharm => caste.contains(Eclipse)
-    case SolarCharm => true
-    case Evocation => true
-    case TerestrialSpell => canCastTerrestrialCircle
-    case CelestialSpell => canCastCelestialCircle
-    case SolarCircleSpell => canCastSolarCircle
-    case SpiritCharm => false
+    case SiderealMartialArtsType => true
+    case MartialArtsType => true
+    case EclipseCharmType => caste.contains(Eclipse)
+    case SolarCharmType => true
+    case EvocationType => true
+    case TerestrialSpellType => canCastTerrestrialCircle
+    case CelestialSpellType => canCastCelestialCircle
+    case SolarCircleSpellType => canCastSolarCircle
+    case SpiritCharmType => false
   }
 
   private def canCastTerrestrialCircle : Boolean = true
@@ -126,12 +126,12 @@ trait Learnable {
 }
 
 sealed trait CharmType
-case object SiderealMartialArts extends CharmType
-case object MartialArts extends CharmType
-case object SpiritCharm extends CharmType
-case object EclipseCharm extends CharmType
-case object SolarCharm extends CharmType
-case object Evocation extends CharmType
-case object TerestrialSpell extends CharmType
-case object CelestialSpell extends CharmType
-case object SolarCircleSpell extends CharmType
+case object SiderealMartialArtsType extends CharmType
+case object MartialArtsType extends CharmType
+case object SpiritCharmType extends CharmType
+case object EclipseCharmType extends CharmType
+case object SolarCharmType extends CharmType
+case object EvocationType extends CharmType
+case object TerestrialSpellType extends CharmType
+case object CelestialSpellType extends CharmType
+case object SolarCircleSpellType extends CharmType

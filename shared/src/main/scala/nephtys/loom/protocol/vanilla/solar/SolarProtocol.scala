@@ -1,9 +1,10 @@
 package nephtys.loom.protocol.vanilla.solar
 
-import nephtys.loom.protocol.shared.CharmRef
+import nephtys.loom.protocol.shared.{CharmRef, EvocationCharm, MartialArtsCharm, Powers, SolarCharm, Spell}
+import nephtys.loom.protocol.shared.CustomPowers.{BonusPointCost, CustomPower, ExperiencePointCost, FreePointCost}
 import nephtys.loom.protocol.vanilla.solar.Abilities._
 import nephtys.loom.protocol.vanilla.solar.Attributes.{AttributeBlock, AttributeRating}
-import nephtys.loom.protocol.vanilla.solar.Experiences.ExperienceType
+import nephtys.loom.protocol.vanilla.solar.Experiences.{ExperienceBox, ExperienceType}
 import nephtys.loom.protocol.vanilla.solar.Intimacies.Intensity
 import nephtys.loom.protocol.vanilla.solar.Merits.{Category, Merit}
 import nephtys.loom.protocol.vanilla.solar.Misc.{Caste, Dots}
@@ -180,13 +181,89 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
     override def commitInternal(old: EventInput): Solar = old.get[Solar].copy(stillInCharGen = false)
   }
 
-  case class PurchaseCustomCharm(id : Id) extends SolarCommand {
-    //TODO: needs parameters and all
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+  case class PurchaseCustomCharm(id : Id, charm : CustomPower) extends SolarCommand {
+    //TODO: check essence rating and/or circle!
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
+      val solar : Solar = input.get
+      charm.customCost match {
+        case BonusPointCost(cost) => if (solar.bonusPointsUnspent >= cost) Success(CustomCharmPurchased(id, charm)) else Failure(Exceptions.missBP())
+        case ExperiencePointCost(costGeneral, useSolarXP) => if(solar.experience.pointsLeftToSpend(useSolarXP) >= costGeneral) Success(CustomCharmPurchased(id, charm)) else Failure(Exceptions.missXP())
+        case FreePointCost(cost) => if (solar.countCharmPurchases < 15) Success(CustomCharmPurchased(id, charm)) else Failure(Exceptions.missFP())
+      }
+    }
   }
 
-  case class PurchaseListCharm(id : Id, charm : CharmRef) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = ???
+  case class CustomCharmPurchased(id : Id, charm : CustomPower) extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = {
+      val solar : Solar = input.get
+      charm.customCost match {
+        case BonusPointCost(cost) => {
+          solar.copy(customCharms = solar.customCharms.+:(charm), bonusPointsUnspent = solar.bonusPointsUnspent - cost)
+        }
+        case ExperiencePointCost(costGeneral, useSolarXP) => {
+          solar.copy(customCharms = solar.customCharms.+:(charm), experience = solar.experience.spendAmount(costGeneral, useSolarXP))
+        }
+        case FreePointCost(cost) => {
+          solar.copy(customCharms = solar.customCharms.+:(charm))
+        }
+      }
+    }
+  }
+
+  case class PurchaseListCharm(id : Id, charmIndex : Int) extends SolarCommand {
+    //TODO: check essence rating and/or circle!
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
+      val solar : Solar = input.get
+      //check charmindex legal
+      if (charmIndex >= Powers.powers.size ||charmIndex < 0) {
+        Failure(new IllegalArgumentException)
+        //check if CG
+      } else if (solar.stillInCharGen) {
+        val t = Powers.powers(charmIndex)
+        val ability : Option[String] = if (t.isInstanceOf[SolarCharm]) Some(t.asInstanceOf[SolarCharm].abilityString) else if (t.isInstanceOf[Spell]) Some(Abilities.preprogrammed.Occult) else None
+        val bpCostOne : Int = if (t.isInstanceOf[EvocationCharm] || ability.exists(a => solar.reducedCost(a))) {4} else {5}
+        //if CG, check free dots and bonus point value
+        solar.countCharmPurchases
+        if (solar.countCharmPurchases < 15 || solar.bonusPointsUnspent >= bpCostOne) {
+          Success(ListedCharmPurchased(id, charmIndex))
+        } else {
+          Failure(Exceptions.missBP())
+        }
+      } else {
+        //if not, check experience
+        val t = Powers.powers(charmIndex)
+        val isSolarcharm : Boolean = t.isInstanceOf[SolarCharm]
+        val ability : Option[String] = if (t.isInstanceOf[SolarCharm]) Some(t.asInstanceOf[SolarCharm].abilityString) else if (t.isInstanceOf[Spell]) Some(Abilities.preprogrammed.Occult) else if (t.isInstanceOf[MartialArtsCharm]) Some(Abilities.preprogrammed.BrawlMartialArtsComboLabel) else None
+        val xpCostOne : Int = if (ability.exists(a => solar.reducedCost(a)) ) {8} else {10}
+
+        if (xpCostOne <= solar.experience.pointsLeftToSpend(isSolarcharm)) {
+            Success(ListedCharmPurchased(id, charmIndex))
+        } else {
+          Failure(Exceptions.missXP())
+        }
+      }
+    }
+  }
+
+  case class ListedCharmPurchased(id : Id, charmIndex : Int) extends SolarEvent { //TODO: store real case object instead here? May be more efficient and would be evolution secure
+    override def commitInternal(input: EventInput): Solar = {
+
+      val solar : Solar = input.get
+      val t = Powers.powers(charmIndex)
+
+      val abilityBP : Option[String] = if (t.isInstanceOf[SolarCharm]) Some(t.asInstanceOf[SolarCharm].abilityString) else if (t.isInstanceOf[Spell]) Some(Abilities.preprogrammed.Occult) else None
+      val bpCostOne : Int = if (t.isInstanceOf[EvocationCharm] || abilityBP.exists(a => solar.reducedCost(a))) {4} else {5}
+      val abilityXP : Option[String] = if (t.isInstanceOf[SolarCharm]) Some(t.asInstanceOf[SolarCharm].abilityString) else if (t.isInstanceOf[Spell]) Some(Abilities.preprogrammed.Occult) else if (t.isInstanceOf[MartialArtsCharm]) Some(Abilities.preprogrammed.BrawlMartialArtsComboLabel) else None
+      val xpCostOne : Int = if (abilityXP.exists(a => solar.reducedCost(a)) ) {8} else {10}
+
+      val isSolarcharm : Boolean = t.isInstanceOf[SolarCharm]
+
+      val newXPBox : ExperienceBox = if (solar.stillInCharGen) solar.experience else  solar.experience.spendAmount(xpCostOne, isSolarcharm)
+      val newBPValue : Int = solar.bonusPointsUnspent - (if (solar.stillInCharGen && solar.countCharmPurchases >= 15) bpCostOne else 0)
+      val newCharms : Set[Int] = solar.listedPowers + charmIndex
+
+      solar.copy(experience = newXPBox, bonusPointsUnspent = newBPValue, listedPowers = newCharms)
+    }
   }
 
   case class SetOwner(id : Id, owner : Email) extends SolarCommand {

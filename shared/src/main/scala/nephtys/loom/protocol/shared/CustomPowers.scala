@@ -15,7 +15,7 @@ object CustomPowers {
   final case class BonusPointCost(bp : Int) extends CustomCost
 
   @JSExportAll
-  final case class ExperiencePointCost(generalXP : Int, solarXP : Int) extends CustomCost
+  final case class ExperiencePointCost(xp : Int, useSolarXPToo : Boolean) extends CustomCost
 
   @JSExportAll
   final case class FreePointCost(freePoints : Int) extends CustomCost
