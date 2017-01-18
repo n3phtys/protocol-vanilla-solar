@@ -1,6 +1,7 @@
 package nephtys.loom.protocol.vanilla.solar
 import nephtys.loom.protocol.shared.CustomPowers.FreePointCost
 import nephtys.loom.protocol.shared._
+import nephtys.loom.protocol.vanilla.solar.Abilities.Type
 import nephtys.loom.protocol.vanilla.solar.Equipments.Equipment
 import nephtys.loom.protocol.vanilla.solar.Merits.Merit
 import nephtys.loom.protocol.vanilla.solar.Misc._
@@ -89,17 +90,18 @@ with CharmLearnable{
   private def canCastTerrestrialCircle : Boolean = true
 
   //todo: check if terrestrial circle charm was bought and essence >= 3 (yes, that one!)
-  private def canCastCelestialCircle : Boolean = ???
+  private def canCastCelestialCircle : Boolean = true
 
   //todo: check if celestial circle charm was bought and essence >= 5 (yes, that one!)
-  private def canCastSolarCircle : Boolean = ???
+  private def canCastSolarCircle : Boolean = true
 
-  override def has(charm: Power with Product with Serializable): Boolean = ??? // listedCharms.contains(charm)
+  override def has(charm: Power with Product with Serializable): Boolean = listedPowers.contains(Powers.powersIndexMap.getOrElse(charm, -1))
 
   override def reducedCost(abilityName: String): Boolean = abilities.getTypeForAbility(abilityName).exists(a => a != Abilities.Normal)
 
   override def ignoreEssence(abilityName: String): Boolean = abilities.getTypeForAbility(abilityName).exists(a => a == Abilities.Supernal)
 
+  override def abilityType(abilityName: String): Option[Type] = abilities.getTypeForAbility(abilityName)
 }
 
 
@@ -111,6 +113,7 @@ trait Essencable {
 
 trait Abilitable {
   def abilityRating(abilityName : String) : Option[Int]
+  def abilityType(abilityName : String) : Option[Abilities.Type]
   def reducedCost(abilityName : String) : Boolean
   def ignoreEssence(abilityName : String) : Boolean
 }
@@ -123,6 +126,7 @@ trait Learnable {
   def canLearn(ct : CharmType) : Boolean
 
   def has(charm : Power with Product with Serializable) : Boolean
+  def has(charmIndex : Int) : Boolean = has(Powers.powers(charmIndex))
 }
 
 sealed trait CharmType
