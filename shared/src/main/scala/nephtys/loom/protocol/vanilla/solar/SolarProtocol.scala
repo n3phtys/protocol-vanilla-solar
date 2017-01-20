@@ -215,7 +215,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
     override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
       val solar : Solar = input.get
       //check charmindex legal
-      if (charmIndex >= Powers.powers.size ||charmIndex < 0) {
+      if (charmIndex >= Powers.powers.size ||charmIndex < 0 || solar.listedPowers.contains(charmIndex)) {
         Failure(new IllegalArgumentException)
         //check if CG
       } else if (solar.stillInCharGen) {
