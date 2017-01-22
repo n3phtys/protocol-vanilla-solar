@@ -29,24 +29,24 @@ final case class Solar(
                       metaInfo : MetaInfo,
                       id : ID[Solar],
                       stillInCharGen  : Boolean,
-                      bonusPointsUnspent : Int, //TODO: needs command/event
+                      bonusPointsUnspent : Int,
 
-                      metaDescriptors: NamedSolarMetaDescriptors,  //TODO: needs command/event
+                      metaDescriptors: NamedSolarMetaDescriptors,
 
-                      caste : Option[Caste], //TODO: needs command/event
+                      caste : Option[Caste],
 
-                      attributes : Attributes.AttributeBlock, //TODO: needs command/event
-                      abilities : Abilities.AbilityMatrix, //TODO: needs command/event
-                      merits : List[Merit], //TODO: needs command/event
+                      attributes : Attributes.AttributeBlock,
+                      abilities : Abilities.AbilityMatrix,
+                      merits : List[Merit],
 
-                      willpowerDots : Int,  //TODO: needs command/event
-                      essenceCommitted : Int,  //TODO: needs command/event
+                      willpowerDots : Int,
+                      essenceCommitted : Int,
 
-                      experience : Experiences.ExperienceBox, //TODO: needs command/event
+                      experience : Experiences.ExperienceBox,
 
-                      equipment : List[Equipment],  //TODO: needs command/event
+                      equipment : List[Equipment],
 
-                      intimacies : Map[String, Intimacies.Intensity], //TODO: needs command/event
+                      intimacies : Map[String, Intimacies.Intensity],
 
                       listedPowers : Set[Int],
                       customCharms : Seq[CustomPowers.CustomPower],

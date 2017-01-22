@@ -263,6 +263,12 @@ object Abilities {
     val Thrown = "Thrown"
     val War = "War"
 
+
+    val flattenedList : IndexedSeq[Ability] = IndexedSeq(
+      Archery, Athletics, Awareness, Brawl, Bureaucracy, Craft, Dodge, Integrity, Investigation, Larceny, Linguistics, Lore, MartialArts, Medicine, Melee,
+      Occult, Performance, Presence, Resistance, Ride, Sail, Socialize, Stealth, Survival, Thrown, War
+    ).sorted.map(s => Ability(s))
+
     val BrawlMartialArtsComboLabel : String = Brawl + " / " + MartialArts
     val CraftsLabel : String = Craft
 
