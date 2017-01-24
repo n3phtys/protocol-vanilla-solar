@@ -19,16 +19,16 @@ case class Solar(
 
                   metaDescriptors: NamedSolarMetaDescriptors,
 
-                  caste : Option[Caste],
+                  caste : Option[Caste], //xp relevant
 
-                  attributes : Attributes.AttributeBlock,
-                  abilities : Abilities.AbilitySet,
-                  merits : List[Merit],
+                  attributes : Attributes.AttributeBlock, //xp relevant
+                  abilities : Abilities.AbilitySet, //xp relevant
+                  merits : List[Merit], //xp relevant
 
-                  willpowerDots : Int,
+                  willpowerDots : Int, //xp relevant
                   essenceCommitted : Int,
 
-                  experience : Experiences.ExperienceBeatBox,
+                  experience : Experiences.ExperienceBeatBox, //xp relevant
 
                   equipment : List[Equipment],
 
@@ -36,8 +36,8 @@ case class Solar(
 
                   intimacies : Map[String, Intimacies.Intensity],
 
-                  listedPowers : Set[Int],
-                  customCharms : Seq[CustomPowers.CustomPower],
+                  listedPowers : Set[Int], //xp relevant
+                  customCharms : Seq[CustomPowers.CustomPower], //xp relevant
 
 
                   notes : List[String]
