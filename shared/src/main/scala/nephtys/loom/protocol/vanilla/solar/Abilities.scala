@@ -25,7 +25,10 @@ object Abilities {
   sealed trait AbilityLikeSpecialtyAble extends AbilityLike with SpecialtyAble with Typeable
 
 
-  final case class Ability(name : String)
+  final case class Ability(name : String) {
+    def after(other : String) : Boolean = name.compareToIgnoreCase(other) >= 0
+    def before(other : String) : Boolean = name.compareToIgnoreCase(other) < 0
+  }
 
   final case class SingleAbility(ability : Ability) extends AbilityLikeSpecialtyAble with Typeable {
     override def abilities: Set[Ability] = Set(ability)

@@ -17,7 +17,7 @@ object CharacterFactory {
       attributes = Attributes.emptyAttributeBlock,
       abilities = Abilities.emptyMatrix, Merits.emptyMeritsList,
       willpowerDots = 5, essenceCommitted =  0,
-      experience = Experiences.emptyBeatBoxWithFree(10, Point),
+      experience = Experiences.emptyBeatBoxWithFree(15, Point),
       aspirations = IndexedSeq.empty,
       equipment = Equipments.emptyEquipmentList, intimacies = Map.empty[String, Intimacies.Intensity],
       listedPowers = Set.empty,

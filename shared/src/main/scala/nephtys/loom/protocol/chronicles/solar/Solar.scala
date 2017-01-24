@@ -47,12 +47,12 @@ case class Solar(
 with CharmLearnable
 {
 
-  //TODO: own abilities (as martial arts and craft are flattened into one single ability each)
+  //own abilities (as martial arts and craft are flattened into one single ability each)
 
   //copy everything from vanilla solar
-  //todo: change following
-  //todo: experience different with beats
-  //todo: no bonus points (instead, start experience box with 10 general)
+  //change following
+  //experience different with beats
+  //no bonus points (instead, start experience box with 15 general)
   //aspirations selector + list
 
 
@@ -80,11 +80,11 @@ with CharmLearnable
   override def has(charm: Power with Product with Serializable): Boolean = listedPowers.contains(Powers.powersIndexMap.getOrElse(charm, -1))
 
 
-  override def attributeRating(attributeName: String): Option[Int] = ???
+  override def attributeRating(attributeName: String): Option[Int] = attributes.getRating(attributeName)
 
   override def essence: Essence = Misc.Essence(experience.essenceLevel)
 
-  override def abilityRating(abilityName: String): Option[Int] = ???
+  override def abilityRating(abilityName: String): Option[Int] = abilities.getRatingForAbility(abilityName)
 
   override def abilityType(abilityName: String): Option[Type] = abilities.getTypeForAbility(abilityName)
 
