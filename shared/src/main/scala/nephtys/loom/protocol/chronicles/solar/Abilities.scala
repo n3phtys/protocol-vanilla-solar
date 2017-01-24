@@ -41,7 +41,11 @@ object Abilities {
       val pointsOver3 : Int = ratings.map(i => Math.max(0, i - breaker)).sum
       val pointsUpTo3 : Int = ratings.map(i => Math.min(breaker, i)).sum
       val specialties : Int = this.specialties.map(_.size).sum
-      ((Math.max(0, pointsUpTo3 - 28) + pointsOver3) * Experiences.Multiplicators.AbilityDot) + (specialties * Experiences.Multiplicators.Specialty)
+      ((Math.max(0, pointsUpTo3 - 28) + pointsOver3) * Experiences.Multiplicators.AbilityDot) + (Math.max(0, specialties - 4) * Experiences.Multiplicators.Specialty)
+    }
+
+    def allFreePointsSpend : Boolean = {
+      ratings.map(i => Math.min(3, i)).sum >= 28 ||  this.specialties.map(_.size).sum >= 4
     }
 
     def contains(abilityName : String): Boolean = getAbilityToName(abilityName).isDefined

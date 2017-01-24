@@ -12,11 +12,11 @@ import org.nephtys.loom.generic.protocol.InternalStructures.{Email, ID, MetaInfo
 object CharacterFactory {
   def emptyChroniclesSolar(id : UUID, owner : Email) : Solar = {
     nephtys.loom.protocol.chronicles.solar.Solar(metaInfo = MetaInfo(owner = owner, readers = Set.empty, public = false)
-      , ID[Solar](id), stillInCharGen = true, NamedSolarMetaDescriptors(limitTrigger = "",name = "",  player = "", concept =  "", anima = ""),
+      , ID[Solar](id), stillInCharGen = true, directDotValues = DirectDotValues(openMeritPoints = 10, willpowerDots = 5, essenceCommitted =  0) , NamedSolarMetaDescriptors(limitTrigger = "",name = "",  player = "", concept =  "", anima = ""),
       caste = None,
       attributes = Attributes.emptyAttributeBlock,
       abilities = Abilities.emptyMatrix, Merits.emptyMeritsList,
-      willpowerDots = 5, essenceCommitted =  0,
+
       experience = Experiences.emptyBeatBoxWithFree(15, Point),
       aspirations = IndexedSeq.empty,
       equipment = Equipments.emptyEquipmentList, intimacies = Map.empty[String, Intimacies.Intensity],

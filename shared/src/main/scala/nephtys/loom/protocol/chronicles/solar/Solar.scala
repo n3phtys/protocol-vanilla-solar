@@ -8,14 +8,23 @@ import nephtys.loom.protocol.vanilla.solar.Misc.{Caste, Eclipse, Essence}
 import nephtys.loom.protocol.vanilla.solar._
 import org.nephtys.loom.generic.protocol.InternalStructures.{ID, MetaInfo}
 
+
+
+final case class DirectDotValues(
+                                  willpowerDots : Int, //xp relevant
+                                  essenceCommitted : Int,
+                                  openMeritPoints : Int
+                                )
 /**
   * Created by Christopher on 21.01.2017.
   */
-case class Solar(
+final case class Solar(
 
                   metaInfo : MetaInfo,
                   id : ID[Solar],
                   stillInCharGen  : Boolean,
+
+                  directDotValues: DirectDotValues,
 
                   metaDescriptors: NamedSolarMetaDescriptors,
 
@@ -25,8 +34,7 @@ case class Solar(
                   abilities : Abilities.AbilitySet, //xp relevant
                   merits : List[Merit], //xp relevant
 
-                  willpowerDots : Int, //xp relevant
-                  essenceCommitted : Int,
+
 
                   experience : Experiences.ExperienceBeatBox, //xp relevant
 

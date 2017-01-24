@@ -1,7 +1,7 @@
 package nephtys.loom.protocol.chronicles.solar
 
 import nephtys.loom.protocol.shared.CustomPowers.CustomPower
-import nephtys.loom.protocol.vanilla.solar.Intimacies
+import nephtys.loom.protocol.vanilla.solar.{Attributes, Exceptions, Intimacies}
 import nephtys.loom.protocol.vanilla.solar.Experiences.ExperienceType
 import nephtys.loom.protocol.vanilla.solar.Misc.Caste
 import org.nephtys.loom.generic.protocol.EventInput.EventInput
@@ -10,7 +10,7 @@ import org.nephtys.loom.generic.protocol.{Backend, Protocol}
 import upickle.default._
 
 import scala.scalajs.js.annotation.JSExportAll
-import scala.util.{Success, Try}
+import scala.util.{Failure, Success, Try}
 
 /**
   * Created by Christopher on 21.01.2017.
@@ -33,9 +33,9 @@ object ChroniclesSolarProtocol extends Protocol[Solar] with Backend[Solar] {
 
     override def checkCreatorIsAuthor(requester: Email): Boolean = owner.equals(requester)
 
-    override protected def validateInternal(input: EventInput): Try[SolarEvent] = Success(Creation(owner, id))
+    override protected def validateInternal(input: EventInput): Try[SolarEvent] = Success(ECreate(owner, id))
   }
-  case class Creation(owner : Email, id : ID[Solar]) extends SolarEvent {
+  case class ECreate(owner : Email, id : ID[Solar]) extends SolarEvent {
 
     override def insert: Boolean = true
 
@@ -48,9 +48,9 @@ object ChroniclesSolarProtocol extends Protocol[Solar] with Backend[Solar] {
   case class Delete(id : ID[Solar]) extends SolarCommand {
     override def remove: Boolean = true
 
-    override protected def validateInternal(input: EventInput): Try[SolarEvent] = Success(Deletion(id))
+    override protected def validateInternal(input: EventInput): Try[SolarEvent] = Success(EDelete(id))
   }
-  case class Deletion(id : ID[Solar]) extends SolarEvent {
+  case class EDelete(id : ID[Solar]) extends SolarEvent {
     override def remove: Boolean = true
     override def changesAfterRemoval(aggregates: Aggregates) : Aggregates = aggregates
 
@@ -59,14 +59,16 @@ object ChroniclesSolarProtocol extends Protocol[Solar] with Backend[Solar] {
 
 
   case class SetName(id : Id, name : String) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[SolarEvent] = {
-      println("Checking SetName Command internally")
-      Success(NameChanged(id, name))
+    override protected def validateInternal(input: EventInput): Try[SolarEvent] =  {
+      if (name.length < 512) {
+        Success(ESetName(id, name))
+      } else {
+        Failure(new IllegalArgumentException)
+      }
     }
   }
-  case class NameChanged(id : Id, name : String) extends SolarEvent {
+  case class ESetName(id : Id, name : String) extends SolarEvent {
     override def commitInternal(old: EventInput): Solar = {
-      println("Commiting SetName Event internally")
       val metaDescriptors = old.get[Solar].metaDescriptors.copy(name = name)
       old.get[Solar].copy(metaDescriptors = metaDescriptors)
     }
@@ -74,89 +76,237 @@ object ChroniclesSolarProtocol extends Protocol[Solar] with Backend[Solar] {
 
 
   case class SetWillpower(id : Id, dots : Int) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] = ???
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] =  {
+      if (dots < 5 || dots > 10) {
+        Failure(new IllegalArgumentException)
+      } else {
+         if (input.get[Solar].directDotValues.willpowerDots >= dots && !input.get[Solar].stillInCharGen) {Failure(new IllegalArgumentException)} else {
+           val xpcost: Int = (dots -  input.get[Solar].directDotValues.willpowerDots) * Experiences.Multiplicators.Willpower
+           if (input.get[Solar].experience.beatsLeftForSpending / Experiences.Point.asBeats(1) >= xpcost) {
+             Success(ESetWillpower(id, dots))
+           } else {
+             Failure(Exceptions.missXP())
+           }
+         }
+      }
+    }
+  }
+  case class ESetWillpower(id : Id, dots : Int) extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = {
+      val solar : Solar = input.get
+      val xpcost: Int = (solar.directDotValues.willpowerDots - dots) * Experiences.Multiplicators.Willpower
+      solar.copy(experience = solar.experience.modifyXP(xpcost), directDotValues = solar.directDotValues.copy(willpowerDots = dots))
+    }
   }
   case class SetCaste(id : Id, caste : Caste) extends SolarCommand {
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] = {
+      val solar : Solar = input.get
+      if(solar.stillInCharGen) {
+        Success(ESetCaste(id, caste))
+      } else {
+        Failure(new IllegalStateException)
+      }
+    }
+  }
+  case class ESetCaste(id : Id, caste : Caste)  extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = {
+      //todo: recalculation of charms' xp value (as this would have changed for listed charms thanks to favored/unfavored split)
+      //todo: can also make some combinations illegal ==> maybe this should just set listed charms back to zero to make sure
+      ???
+    }
+  }
+  case class AddManualExperienceChange(id : Id, amountAdded : Int, note : String) extends SolarCommand {
     override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] = ???
   }
-  case class AddManualExperienceChange(id : Id, amountAdded : Int, typ : ExperienceType, note : String) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] = ???
+  case class EAddManualExperienceChange(id : Id, amountAdded : Int, note : String, timestamp : Long) extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = ???
   }
   case class SetAnima(id : Id, anima : String) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] = ???
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] = {
+      if (anima.length < 512) {
+        Success(ESetAnima(id, anima))
+      } else {
+        Failure(new IllegalArgumentException)
+      }
+    }
+  }
+  case class ESetAnima(id : Id, anima : String) extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = {
+      val metaDescriptors = input.get[Solar].metaDescriptors.copy(anima = anima)
+      input.get[Solar].copy(metaDescriptors = metaDescriptors)
+    }
   }
   case class SetConcept(id : Id, concept : String) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] = ???
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] =  {
+      if (concept.length < 512) {
+        Success(ESetConcept(id, concept))
+      } else {
+        Failure(new IllegalArgumentException)
+      }
+    }
+  }
+  case class ESetConcept(id : Id, concept : String) extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = {
+      val metaDescriptors = input.get[Solar].metaDescriptors.copy(concept = concept)
+      input.get[Solar].copy(metaDescriptors = metaDescriptors)
+    }
   }
   case class SetLimitTrigger(id : Id, limitTrigger : String) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] = ???
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] =  {
+      if (limitTrigger.length < 512) {
+        Success(ESetLimitTrigger(id, limitTrigger))
+      } else {
+        Failure(new IllegalArgumentException)
+      }
+    }
+  }
+  case class ESetLimitTrigger(id : Id, limitTrigger: String) extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = {
+      val metaDescriptors = input.get[Solar].metaDescriptors.copy(limitTrigger = limitTrigger)
+      input.get[Solar].copy(metaDescriptors = metaDescriptors)
+    }
   }
   case class SetPlayer(id : Id, player : String) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] = ???
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] =  {
+      if (player.length < 512) {
+        Success(ESetPlayer(id, player))
+      } else {
+        Failure(new IllegalArgumentException)
+      }
+    }
   }
-  case class LeaveCharacterGeneration(id : Id) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] = ???
+  case class ESetPlayer(id : Id, player : String) extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = {
+      val metaDescriptors = input.get[Solar].metaDescriptors.copy(player = player)
+      input.get[Solar].copy(metaDescriptors = metaDescriptors)
+    }
+  }
+  case class LeaveCG(id : Id) extends SolarCommand {
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] = {
+      val solar : Solar = input.get
+      if (!solar.stillInCharGen || !solar.attributes.allFreePointsUsed || !solar.abilities.allFreePointsSpend) {
+        Failure(new IllegalStateException())
+      } else {
+        Success(ELeaveCG(id))
+      }
+    }
+  }
+  case class ELeaveCG(id : Id) extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = ???
   }
   case class PurchaseCustomCharm(id : Id, charm : CustomPower) extends SolarCommand {
     override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] = ???
   }
+  case class EPurchaseCustomCharm(id : Id, charm : CustomPower) extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = ???
+  }
   case class PurchaseListCharm(id : Id, charmIndex : Int) extends SolarCommand {
     override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] = ???
   }
+  case class EPurchaseListCharm(id : Id, charmIndex : Int) extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = ???
+  }
   case class SetOwner(id : Id, owner : Email) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] = ???
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] = Success(ESetOwner(id, owner))
+  }
+  case class ESetOwner(id : Id, owner : Email) extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = input.get[Solar].copy(metaInfo = input.get[Solar].metaInfo.copy( owner = owner))
   }
   case class SetReaders(id : Id, readers : Set[Email]) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] = ???
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] = Success(ESetReaders(id, readers))
+  }
+  case class ESetReaders(id : Id, readers : Set[Email]) extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = input.get[Solar].copy(metaInfo = input.get[Solar].metaInfo.copy( readers = readers))
   }
   case class SetPublic(id : Id, public : Boolean) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] = ???
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] = Success(ESetPublic(id, public))
+  }
+  case class ESetPublic(id : Id, public : Boolean) extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = input.get[Solar].copy(metaInfo = input.get[Solar].metaInfo.copy( public = public))
   }
   case class AddAbility(id : Id, abilityName : String) extends SolarCommand {
     override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] = ???
   }
+  case class EAddAbility(id : Id, abilityName : String) extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = ???
+  }
   case class SetAbilityRating(id : Id, abilityName : String, rating : Int) extends SolarCommand {
     override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] = ???
+  }
+  case class ESetAbilityRating(id : Id, abilityName : String, rating : Int) extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = ???
   }
   case class SetAbilityType(id : Id, abilityName : String, typ : nephtys.loom.protocol.vanilla.solar.Abilities.Type) extends SolarCommand {
     override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] = ???
   }
+  case class ESetAbilityType(id : Id, abilityName : String, typ : nephtys.loom.protocol.vanilla.solar.Abilities.Type) extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = ???
+  }
   case class AddOrRemoveSpecialty(id : Id, abilityName : String, title : String, add : Boolean) extends SolarCommand {
     override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] = ???
   }
+  case class EAddOrRemoveSpecialty(id : Id, abilityName : String, title : String, add : Boolean) extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = ???
+  }
   case class SetIntimacy(id : Id, title : String, intensity : Option[Intimacies.Intensity]) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] = ???
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] = Success(ESetIntimacy(id, title, intensity))
+  }
+  case class ESetIntimacy(id : Id, title : String, intensity : Option[Intimacies.Intensity]) extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = {
+      val s = input.get[Solar]
+      if (intensity.isDefined) {
+        s.copy(intimacies = s.intimacies.+((title, intensity.get)))
+      } else {
+        s.copy(intimacies = s.intimacies.-(title))
+      }
+    }
   }
   case class SetAspiration(id : Id, index : Int, title : String) extends SolarCommand {
     override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] = ???
   }
+  case class ESetAspiration(id : Id, index : Int, title : String) extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = ???
+  }
   case class AddRemoveOrChangeMerit(id : Id, title : String, category : String, add : Option[Boolean], rating : Int) extends SolarCommand {
     override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] = ???
   }
+  case class EAddRemoveOrChangeMerit(id : Id, title : String, category : String, add : Option[Boolean], rating : Int) extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = ???
+  }
   case class AddNote(id : Id, str : String, index : Int ) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] = ???
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] = if (input.get[Solar].notes.length >= index && index >= 0 ) {
+      Success(EAddNote(id, str, index))
+    } else {
+      Failure(new IndexOutOfBoundsException)
+    }
+  }
+  case class EAddNote(id : Id, str : String, index : Int ) extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = {
+      val oldlist : List[String] = input.get[Solar].notes
+      val newlist : List[String] = oldlist.take(index).:+(str) ++ oldlist.drop(index)
+      input.get[Solar].copy(notes = newlist)
+    }
   }
   case class RemoveNote(id : Id, index : Int ) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] = ???
+    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] = if (input.get[Solar].notes.length > index && index >= 0 ) {
+      Success(ERemoveNote(id, index))
+    } else {
+      Failure(new IndexOutOfBoundsException)
+    }
+  }
+  case class ERemoveNote(id : Id, index : Int ) extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = {
+      val oldlist : List[String] = input.get[Solar].notes
+      val newlist : List[String] = oldlist.take(index) ++ oldlist.drop(index+1)
+      input.get[Solar].copy(notes = newlist)
+    }
   }
   case class SetAttribute(id : Id, attributeIndex : Int, rating : Int) extends SolarCommand {
     override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.chronicles.solar.ChroniclesSolarProtocol.Event] = ???
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  case class ESetAttribute(id : Id, attributeIndex : Int, rating : Int) extends SolarEvent {
+    override def commitInternal(input: EventInput): Solar = ???
+  }
 
 
 

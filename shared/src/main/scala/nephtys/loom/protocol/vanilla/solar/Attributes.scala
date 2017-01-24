@@ -43,6 +43,8 @@ object Attributes {
 
   //ordering = 8 is default, each other value equals one of 6 possibilities, given by 0 - 5
   final case class AttributeBlock(block : IndexedSeq[AttributeRating], ordering : Int ) {
+    def allFreePointsUsed : Boolean = (primaryDots >= 11) || (secondaryDots >= 9) || (ternaryDots >= 7)
+
     //information about primary/secondary/terniary via indices is saved in ordering
 
     assert(block.size == Attributes.size)

@@ -456,13 +456,13 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
 
   case class IntimacyChanged(id : Id, title : String, intensity: Option[Intensity]) extends SolarEvent {
     override def commitInternal(old: EventInput): Solar = {
-      val s = old.get[Solar]
-      if (intensity.isDefined) {
-        s.copy(intimacies = s.intimacies.+((title, intensity.get)))
-      } else {
-        s.copy(intimacies = s.intimacies.-(title))
-      }
+    val s = old.get[Solar]
+    if (intensity.isDefined) {
+      s.copy(intimacies = s.intimacies.+((title, intensity.get)))
+    } else {
+      s.copy(intimacies = s.intimacies.-(title))
     }
+  }
   }
 
   case class AddMerit(id : Id, title : String, category : String) extends SolarCommand {

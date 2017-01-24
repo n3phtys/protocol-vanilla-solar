@@ -95,6 +95,10 @@ object Experiences {
       copy(beats = ExperienceCategory(current, total))
     }
 
+    def modifyXP(amountPositive : Int) : ExperienceBeatBox = modifyBeats(Point.asBeats(amountPositive))
+
+    def modifyXPManually(amountPositive : Int, timestamp : Long, comment : String) : ExperienceBeatBox = modifyBeatsManually(Point.asBeats(amountPositive), timestamp, comment)
+
     def modifyBeatsManually(amountPositive : Int, timestamp : Long, comment : String): ExperienceBeatBox = {
       val me = ManualEntry(amountPositive, comment, timestamp)
       val b = modifyBeats(amountPositive)

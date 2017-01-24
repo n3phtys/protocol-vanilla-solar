@@ -14,9 +14,9 @@ import scala.util.Try
 @JSExport
 @JSExportAll
 final case class NamedSolarMetaDescriptors(name : String,
-                                           concept : String, //TODO: needs command/event
-                                           player : String, //TODO: needs command/event
-                                           anima : String, //TODO: needs command/event
+                                           concept : String,
+                                           player : String,
+                                           anima : String,
                                            limitTrigger: String)
 
 
