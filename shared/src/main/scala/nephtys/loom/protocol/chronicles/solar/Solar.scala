@@ -8,8 +8,12 @@ import nephtys.loom.protocol.vanilla.solar.Misc.{Caste, Eclipse, Essence}
 import nephtys.loom.protocol.vanilla.solar._
 import org.nephtys.loom.generic.protocol.InternalStructures.{ID, MetaInfo}
 
+import scala.scalajs.js.annotation.{JSExport, JSExportAll}
 
 
+
+@JSExport
+@JSExportAll
 final case class DirectDotValues(
                                   willpowerDots : Int, //xp relevant
                                   essenceCommitted : Int,
@@ -18,6 +22,9 @@ final case class DirectDotValues(
 /**
   * Created by Christopher on 21.01.2017.
   */
+
+@JSExport
+@JSExportAll
 final case class Solar(
 
                   metaInfo : MetaInfo,
@@ -54,6 +61,10 @@ final case class Solar(
   extends org.nephtys.loom.generic.protocol.Aggregate[Solar]
 with CharmLearnable
 {
+
+
+  def name : String = metaDescriptors.name
+  def casteString : String = caste.map(_.toString).getOrElse("Casteless")
 
   //own abilities (as martial arts and craft are flattened into one single ability each)
 

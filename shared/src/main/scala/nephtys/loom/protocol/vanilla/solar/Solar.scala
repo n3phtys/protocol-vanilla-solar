@@ -63,6 +63,10 @@ with CharmLearnable{
     Experiences.spentXPtoEssenceLevel(experience.generalXP.spent)
   }
 
+  def name : String = metaDescriptors.name
+  def casteString : String = caste.map(_.toString).getOrElse("Casteless")
+
+
 
   def countCharmPurchases: Int = listedPowers.size + customCharms.map(a => a.customCost match {
     case FreePointCost(i) => i
