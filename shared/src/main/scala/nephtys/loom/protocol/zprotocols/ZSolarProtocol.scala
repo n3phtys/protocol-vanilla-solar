@@ -1,14 +1,15 @@
-package nephtys.loom.protocol.vanilla.solar
+package nephtys.loom.protocol.zprotocols
 
-import nephtys.loom.protocol.shared.{CharmRef, EvocationCharm, MartialArtsCharm, Powers, SolarCharm, Spell}
 import nephtys.loom.protocol.shared.CustomPowers.{BonusPointCost, CustomPower, ExperiencePointCost, FreePointCost}
+import nephtys.loom.protocol.shared._
 import nephtys.loom.protocol.vanilla.solar.Abilities._
 import nephtys.loom.protocol.vanilla.solar.Attributes.{AttributeBlock, AttributeRating}
 import nephtys.loom.protocol.vanilla.solar.Experiences.{ExperienceBox, ExperienceType}
 import nephtys.loom.protocol.vanilla.solar.Intimacies.Intensity
-import nephtys.loom.protocol.vanilla.solar.Merits.{Category, Merit}
+import nephtys.loom.protocol.vanilla.solar.Merits.Merit
 import nephtys.loom.protocol.vanilla.solar.Misc.{Caste, Dots}
-import org.nephtys.loom.generic.protocol.EventInput.{EventInput, Update}
+import nephtys.loom.protocol.vanilla.solar._
+import org.nephtys.loom.generic.protocol.EventInput.EventInput
 import org.nephtys.loom.generic.protocol.InternalStructures.{Email, EndpointRoot, FailableList, ID}
 import org.nephtys.loom.generic.protocol.{Backend, Protocol}
 import upickle.default._
@@ -20,7 +21,7 @@ import scala.util.{Failure, Success, Try}
   * Created by nephtys on 12/7/16.
   */
 @JSExportAll
-object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
+object ZSolarProtocol extends Protocol[Solar] with Backend[Solar] {
   type Id = ID[Solar]
   override val endpointRoot: EndpointRoot = EndpointRoot("vanillasolar")
 
@@ -35,7 +36,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
 
     override def checkCreatorIsAuthor(requester: Email): Boolean = owner.equals(requester)
 
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = Success(Creation(owner, id))
+    override protected def validateInternal(input: EventInput): Try[ZSolarProtocol.Event] = Success(Creation(owner, id))
   }
   case class Creation(owner : Email, id : ID[Solar]) extends SolarEvent {
 
@@ -50,7 +51,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   case class Delete(id : ID[Solar]) extends SolarCommand {
     override def remove: Boolean = true
 
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = Success(Deletion(id))
+    override protected def validateInternal(input: EventInput): Try[ZSolarProtocol.Event] = Success(Deletion(id))
   }
   case class Deletion(id : ID[Solar]) extends SolarEvent {
     override def remove: Boolean = true
@@ -61,7 +62,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
 
 
   case class SetName(id : Id, name : String) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
+    override protected def validateInternal(input: EventInput): Try[ZSolarProtocol.Event] = {
       println("Checking SetName Command internally")
       Success(NameChanged(id, name))
     }
@@ -75,7 +76,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class SetWillpower(id : Id, dots : Int) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
+    override protected def validateInternal(input: EventInput): Try[ZSolarProtocol.Event] = {
       val solar : Solar = input.get
       val dif = dots - solar.willpowerDots
       if (dots < 5 || dots > 10 || (!solar.stillInCharGen && dif <= 0)) {
@@ -105,7 +106,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class SetCaste(id : Id, caste : Caste) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = if(input.get[Solar].stillInCharGen) Success(CasteChanged(id, caste)) else Failure(new Exception("Caste can only be changed during CharGen"))
+    override protected def validateInternal(input: EventInput): Try[ZSolarProtocol.Event] = if(input.get[Solar].stillInCharGen) Success(CasteChanged(id, caste)) else Failure(new Exception("Caste can only be changed during CharGen"))
   }
 
   case class CasteChanged(id : Id, caste : Caste) extends SolarEvent {
@@ -113,7 +114,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class AddManualExperienceChange(id : Id, amountAdded : Int, typ : ExperienceType, note : String) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
+    override protected def validateInternal(input: EventInput): Try[ZSolarProtocol.Event] = {
       input.get[Solar].experience.addManualEntry(amountAdded, typ, note, System.currentTimeMillis()).map(t => ExperienceChangedManually(id, amountAdded, typ, note, System.currentTimeMillis()))
     }
   }
@@ -127,7 +128,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
 
 
   case class SetAnima(id : Id, anima : String) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = Success(AnimaChanged(id, anima))
+    override protected def validateInternal(input: EventInput): Try[ZSolarProtocol.Event] = Success(AnimaChanged(id, anima))
   }
 
   case class AnimaChanged(id : Id, anima : String) extends SolarEvent {
@@ -139,7 +140,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class SetConcept(id : Id, concept : String) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = Success(ConceptChanged(id, concept))
+    override protected def validateInternal(input: EventInput): Try[ZSolarProtocol.Event] = Success(ConceptChanged(id, concept))
   }
 
   case class ConceptChanged(id : Id, concept : String) extends SolarEvent {
@@ -151,7 +152,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class SetLimitTrigger(id : Id, limitTrigger : String) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = Success(LimitTriggerChanged(id, limitTrigger))
+    override protected def validateInternal(input: EventInput): Try[ZSolarProtocol.Event] = Success(LimitTriggerChanged(id, limitTrigger))
   }
 
   case class LimitTriggerChanged(id : Id, limitTrigger : String) extends SolarEvent {
@@ -163,7 +164,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class SetPlayer(id : Id, player : String) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = Success(PlayerChanged(id, player))
+    override protected def validateInternal(input: EventInput): Try[ZSolarProtocol.Event] = Success(PlayerChanged(id, player))
   }
 
   case class PlayerChanged(id : Id, player : String) extends SolarEvent {
@@ -174,7 +175,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class LeaveCharacterGeneration(id : Id) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = Success(CharacterGenerationLeft(id))
+    override protected def validateInternal(input: EventInput): Try[ZSolarProtocol.Event] = Success(CharacterGenerationLeft(id))
   }
 
   case class CharacterGenerationLeft(id : Id) extends SolarEvent {
@@ -183,7 +184,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
 
   case class PurchaseCustomCharm(id : Id, charm : CustomPower) extends SolarCommand {
     //TODO: check essence rating and/or circle!
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
+    override protected def validateInternal(input: EventInput): Try[ZSolarProtocol.Event] = {
       val solar : Solar = input.get
       charm.customCost match {
         case BonusPointCost(cost) => if (solar.bonusPointsUnspent >= cost) Success(CustomCharmPurchased(id, charm)) else Failure(Exceptions.missBP())
@@ -212,7 +213,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
 
   case class PurchaseListCharm(id : Id, charmIndex : Int) extends SolarCommand {
     //TODO: check essence rating and/or circle!
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
+    override protected def validateInternal(input: EventInput): Try[ZSolarProtocol.Event] = {
       val solar : Solar = input.get
       //check charmindex legal
       if (charmIndex >= Powers.powers.size ||charmIndex < 0 || solar.listedPowers.contains(charmIndex)) {
@@ -267,7 +268,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class SetOwner(id : Id, owner : Email) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = Success(OwnerChanged(id, owner))
+    override protected def validateInternal(input: EventInput): Try[ZSolarProtocol.Event] = Success(OwnerChanged(id, owner))
   }
 
   case class OwnerChanged(id : Id, owner : Email) extends SolarEvent {
@@ -275,7 +276,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class SetReaders(id : Id, readers : Set[Email]) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = Success(ReadersChanged(id, readers))
+    override protected def validateInternal(input: EventInput): Try[ZSolarProtocol.Event] = Success(ReadersChanged(id, readers))
   }
 
   case class ReadersChanged(id : Id, readers : Set[Email]) extends SolarEvent {
@@ -283,7 +284,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class SetPublic(id : Id, public : Boolean) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = Success(MadePublic(id, public))
+    override protected def validateInternal(input: EventInput): Try[ZSolarProtocol.Event] = Success(MadePublic(id, public))
   }
 
   case class MadePublic(id : Id, public : Boolean) extends SolarEvent {
@@ -292,7 +293,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
 
 
   case class SetAbilityRating(id : Id, ability : Ability, rating : Int) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
+    override protected def validateInternal(input: EventInput): Try[ZSolarProtocol.Event] = {
       val solar : Solar = input.get
       val dif : Int = rating - solar.abilities.ratings(ability).number
       if (solar.abilities.rateables.contains(ability.name) && rating >= 0 && rating <= 5) {
@@ -330,7 +331,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class AddToAbilityFamily(id : Id, familyTitle : String, title : String) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
+    override protected def validateInternal(input: EventInput): Try[ZSolarProtocol.Event] = {
       val solar : Solar = input.get
       if(solar.abilities.rateables.contains(title) || !solar.abilities.families.contains(familyTitle)) {
         println("AddToAbilityFamily failed")
@@ -359,7 +360,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class RemoveFromAbilityFamily(id : Id, familyTitle : String, title : String) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
+    override protected def validateInternal(input: EventInput): Try[ZSolarProtocol.Event] = {
       val solar : Solar = input.get
       if(solar.abilities.getSubability(familyTitle, title).forall(a => solar.abilities.ratings(a).number == 0)) {
         Failure(new IllegalArgumentException)
@@ -370,7 +371,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class SetAbilityType(id : Id, typeableTitle : String, typ : Abilities.Type) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
+    override protected def validateInternal(input: EventInput): Try[ZSolarProtocol.Event] = {
       val solar : Solar = input.get
       if (solar.abilities.typeables.contains(typeableTitle) && solar.stillInCharGen) {
         if (typ match {
@@ -398,7 +399,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class AddSpecialty(id : Id, specialtyAble: AbilityLikeSpecialtyAble, title : String) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
+    override protected def validateInternal(input: EventInput): Try[ZSolarProtocol.Event] = {
       val solar : Solar = input.get
       val xpcost : Int = 3
       val bpcost : Int = 1
@@ -413,7 +414,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class RemoveSpecialty(id : Id, specialtyAble: AbilityLikeSpecialtyAble, title : String) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
+    override protected def validateInternal(input: EventInput): Try[ZSolarProtocol.Event] = {
       val solar : Solar = input.get
       if (solar.stillInCharGen && solar.abilities.abilities.contains(specialtyAble) && solar.abilities.specialties.get(specialtyAble).exists(_.exists(_.name == title))) {
         Success(SpecialtyRemoved(id, specialtyAble, title))
@@ -451,7 +452,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
 
   //includes delete
   case class SetIntimacy(id : Id, title : String, intensity : Option[Intimacies.Intensity]) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = Success(IntimacyChanged(id, title, intensity))
+    override protected def validateInternal(input: EventInput): Try[ZSolarProtocol.Event] = Success(IntimacyChanged(id, title, intensity))
   }
 
   case class IntimacyChanged(id : Id, title : String, intensity: Option[Intensity]) extends SolarEvent {
@@ -466,7 +467,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class AddMerit(id : Id, title : String, category : String) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = Success(MeritAdded(id, title, category))
+    override protected def validateInternal(input: EventInput): Try[ZSolarProtocol.Event] = Success(MeritAdded(id, title, category))
   }
 
   case class MeritAdded(id : Id, title : String, category: String) extends SolarEvent {
@@ -474,7 +475,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class ChangeMerit(id : Id, index : Int, newrating : Option[Int]) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
+    override protected def validateInternal(input: EventInput): Try[ZSolarProtocol.Event] = {
       val solar : Solar = input.get[Solar]
       if (newrating.forall(a => 0 <= a && a <= 5) && index >= 0 && solar.merits.size > index) {
         println("Passing newrating check")
@@ -572,7 +573,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class AddNote(id : Id, str : String, index : Int ) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
+    override protected def validateInternal(input: EventInput): Try[ZSolarProtocol.Event] = {
       if (input.get[Solar].notes.length >= index && index >= 0 ) {
         Success(NoteAdded(id, str, index))
       } else {
@@ -588,7 +589,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
     }
   }
   case class RemoveNote(id : Id, index : Int ) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
+    override protected def validateInternal(input: EventInput): Try[ZSolarProtocol.Event] = {
       if (input.get[Solar].notes.length > index && index >= 0 ) {
         Success(NoteRemoved(id, index))
       } else {
@@ -605,7 +606,7 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
   }
 
   case class SetAttribute(id : Id, attributeIndex : Int, rating : Int) extends SolarCommand {
-    override protected def validateInternal(input: EventInput): Try[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event] = {
+    override protected def validateInternal(input: EventInput): Try[ZSolarProtocol.Event] = {
       val solar : Solar = input.get[Solar]
       //are rating and attribute in range?
       if (attributeIndex < 0 || attributeIndex >= 9 || rating < 1 || rating > 5) {
@@ -714,9 +715,9 @@ object SolarProtocol extends Protocol[Solar] with Backend[Solar] {
 
 
 
-  override def readCommands(json: String): Seq[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Command] = read[Seq[SolarCommand]](json)
+  override def readCommands(json: String): Seq[ZSolarProtocol.Command] = read[Seq[SolarCommand]](json)
 
   override def writeAggregates(aggregates: Seq[Solar]): String = write(aggregates)
 
-  override def writeFailableList(failableList: FailableList[_root_.nephtys.loom.protocol.vanilla.solar.SolarProtocol.Event]): String = write(failableList.asInstanceOf[FailableList[SolarEvent]])
+  override def writeFailableList(failableList: FailableList[ZSolarProtocol.Event]): String = write(failableList.asInstanceOf[FailableList[SolarEvent]])
 }
