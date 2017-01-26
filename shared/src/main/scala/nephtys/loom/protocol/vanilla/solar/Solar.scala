@@ -106,10 +106,14 @@ with CharmLearnable{
   override def ignoreEssence(abilityName: String): Boolean = abilities.getTypeForAbility(abilityName).exists(a => a == Abilities.Supernal)
 
   override def abilityType(abilityName: String): Option[Type] = abilities.getTypeForAbility(abilityName)
+
+  override def selectableAbilities: Seq[String] = abilities.abilities.map(_.name).toSeq
 }
 
 
-trait CharmLearnable extends Essencable with Abilitable with Attributable with Learnable
+trait CharmLearnable extends Essencable with Abilitable with Attributable with Learnable {
+  def customCharms : Seq[CustomPowers.CustomPower]
+}
 
 trait Essencable {
   def essence : Essence
@@ -120,6 +124,8 @@ trait Abilitable {
   def abilityType(abilityName : String) : Option[Abilities.Type]
   def reducedCost(abilityName : String) : Boolean
   def ignoreEssence(abilityName : String) : Boolean
+
+  def selectableAbilities : Seq[String]
 }
 
 trait Attributable {

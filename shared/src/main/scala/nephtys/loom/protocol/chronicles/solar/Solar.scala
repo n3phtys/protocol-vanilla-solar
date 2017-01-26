@@ -110,4 +110,6 @@ with CharmLearnable
   override def reducedCost(abilityName: String): Boolean = abilities.getTypeForAbility(abilityName).exists(a => a != nephtys.loom.protocol.vanilla.solar.Abilities.Normal)
 
   override def ignoreEssence(abilityName: String): Boolean = abilities.getTypeForAbility(abilityName).exists(a => a == nephtys.loom.protocol.vanilla.solar.Abilities.Supernal)
+
+  override def selectableAbilities: Seq[String] = abilities.abilities.map(_.name)
 }
