@@ -197,6 +197,7 @@ object ZSolarProtocol extends Protocol[Solar] with Backend[Solar] {
   case class CustomCharmPurchased(id : Id, charm : CustomPower) extends SolarEvent {
     override def commitInternal(input: EventInput): Solar = {
       val solar : Solar = input.get
+
       charm.customCost match {
         case BonusPointCost(cost) => {
           solar.copy(customCharms = solar.customCharms.+:(charm), bonusPointsUnspent = solar.bonusPointsUnspent - cost)
@@ -216,6 +217,9 @@ object ZSolarProtocol extends Protocol[Solar] with Backend[Solar] {
     override protected def validateInternal(input: EventInput): Try[ZSolarProtocol.Event] = {
       val solar : Solar = input.get
       //check charmindex legal
+
+      //TODO: first check if the solar can even purchase this charm
+
       if (charmIndex >= Powers.powers.size ||charmIndex < 0 || solar.listedPowers.contains(charmIndex)) {
         Failure(new IllegalArgumentException)
         //check if CG

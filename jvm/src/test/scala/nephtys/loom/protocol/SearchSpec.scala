@@ -25,7 +25,8 @@ class SearchSpec extends FlatSpec with Matchers {
   it should "handle upper edge case" in {
     val element = 5
     val arr : Seq[Int] = Seq(0, 2, 3, 4)
-    val shouldbe : Int = 1 //elseValue only for below
+    val shouldbe : Int = arr.length //elseValue only for lower edge
+    assert(shouldbe == 4)
     val is = Search.binaryIndexOrElse(arr, (a : (Int)) => a, element, 0)
     shouldbe should be (is)
   }

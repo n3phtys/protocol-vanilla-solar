@@ -1,8 +1,11 @@
 package nephtys.loom.protocol
 
+import scala.scalajs.js.annotation.JSExportAll
+
 /**
   * Created by Christopher on 26.01.2017.
   */
+@JSExportAll
 object Search {
 
 
@@ -30,7 +33,7 @@ object Search {
       println(s"Looping with min/max = [$min : $max]")
       lower = (min + max) / 2
       //first case: if lowerElement is lower equal and upperElement is greater or non existent, return this index
-      if (lowerInt <= elementInt  && min != max) {
+      if (lowerInt <= elementInt ) {
         if (upperInt.forall(i => i > elementInt)) {
           notFound = false
           foundIndex = Some(upper)
