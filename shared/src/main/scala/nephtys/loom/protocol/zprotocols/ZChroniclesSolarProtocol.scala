@@ -95,7 +95,7 @@ object ZChroniclesSolarProtocol extends Protocol[Solar] with Backend[Solar] {
     override def commitInternal(input: EventInput): Solar = {
       val solar : Solar = input.get
       val xpcost: Int = (solar.directDotValues.willpowerDots - dots) * Experiences.Multiplicators.Willpower
-      solar.copy(experience = solar.experience.modifyXP(xpcost), directDotValues = solar.directDotValues.copy(willpowerDots = dots))
+      solar.copy(experience = solar.experience.modifyXP(xpcost).get, directDotValues = solar.directDotValues.copy(willpowerDots = dots))
     }
   }
   case class SetCaste(id : Id, caste : Caste) extends SolarCommand {

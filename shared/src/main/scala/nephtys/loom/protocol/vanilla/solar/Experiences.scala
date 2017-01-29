@@ -2,7 +2,7 @@ package nephtys.loom.protocol.vanilla.solar
 
 import nephtys.loom.protocol.vanilla.solar.Misc.Essence
 
-import scala.scalajs.js.annotation.JSExportAll
+import scala.scalajs.js.annotation.{JSExport, JSExportAll}
 import scala.util.{Failure, Success, Try}
 
 /**

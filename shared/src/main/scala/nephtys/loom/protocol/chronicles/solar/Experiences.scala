@@ -2,9 +2,13 @@ package nephtys.loom.protocol.chronicles.solar
 
 import nephtys.loom.protocol.vanilla.solar.Experiences.ExperienceCategory
 
+import scala.scalajs.js.annotation.{JSExport, JSExportAll}
+import scala.util.{Failure, Success, Try}
+
 /**
   * Created by Christopher on 21.01.2017.
   */
+@JSExportAll
 object Experiences {
   object Multiplicators {
     val CharmsReduced = 3
@@ -49,24 +53,40 @@ object Experiences {
   //tracks current / total
   //calculate essence based on total spent
 
-  def emptyBeatBoxWithFree(amount : Int, unit : Experiences.Unit) : ExperienceBeatBox = {
+  def emptyBeatBoxWithFree(amount : Int = 0, unit : Experiences.Unit = Point) : ExperienceBeatBox = {
     val x = unit.asBeats(amount)
     val timestamp = System.currentTimeMillis()
     val comment = s"Starting with $x free Beats"
     val y = ExperienceBeatBox(beats = ExperienceCategory(0, 0), manualEntries = IndexedSeq.empty)
-    y.modifyBeatsManually(x, timestamp, comment)
+    y.modifyBeatsManually(x, timestamp, comment).getOrElse(y)
   }
 
+
+
+  @JSExportAll
   final case class ManualEntry(
                               amountPositive : Int,
                               note : String,
                               timestamp : Long
-                              )
+                              ) {
+    val stringText : String = s"""${if(amountPositive > 0) "+" else ""}$amountPositive for reason: $note"""
 
+  }
+
+
+  @JSExportAll
   final case class ExperienceBeatBox(
                                      beats : ExperienceCategory,
                                      manualEntries : IndexedSeq[ManualEntry]
                                     ) {
+
+    val pointsLeft : Int  = Beat.asPoints(beats.current)
+    val beatsLeft : Int = beats.current - Point.asBeats(pointsLeft)
+    val pointsTotal : Int = Beat.asPoints(beats.total)
+    val beatsTotal : Int = beats.total - pointsTotal
+    val pointsSpent : Int = Beat.asPoints(beats.spent)
+
+
     def essenceLevel : Int = {
       if (beats.spent >= 150 * 5 ) {
         5
@@ -85,24 +105,28 @@ object Experiences {
     : Int = beats.current
 
 
-    def modifyBeats(amountPositive : Int) : ExperienceBeatBox = if (amountPositive > 0) {
+    def modifyBeats(amountPositive : Int) : Try[ExperienceBeatBox] = if (amountPositive > 0) {
       val current : Int = beats.current + amountPositive //increase
       val total : Int = beats.total + amountPositive //increase
-      copy(beats = ExperienceCategory(current, total))
+      Success(copy(beats = ExperienceCategory(current, total)))
      } else {
       val current : Int = beats.current + amountPositive //decrease
       val total : Int = beats.total //stay the same
-      copy(beats = ExperienceCategory(current, total))
+      if (current >= 0) {
+        Success(copy(beats = ExperienceCategory(current, total)))
+      } else {
+        Failure(new IllegalStateException())
+      }
     }
 
-    def modifyXP(amountPositive : Int) : ExperienceBeatBox = modifyBeats(Point.asBeats(amountPositive))
+    def modifyXP(amountPositive : Int) : Try[ExperienceBeatBox] = modifyBeats(Point.asBeats(amountPositive))
 
-    def modifyXPManually(amountPositive : Int, timestamp : Long, comment : String) : ExperienceBeatBox = modifyBeatsManually(Point.asBeats(amountPositive), timestamp, comment)
+    def modifyXPManually(amountPositive : Int, timestamp : Long, comment : String) : Try[ExperienceBeatBox] = modifyBeatsManually(Point.asBeats(amountPositive), timestamp, comment)
 
-    def modifyBeatsManually(amountPositive : Int, timestamp : Long, comment : String): ExperienceBeatBox = {
+    def modifyBeatsManually(amountPositive : Int, timestamp : Long, comment : String): Try[ExperienceBeatBox] = {
       val me = ManualEntry(amountPositive, comment, timestamp)
       val b = modifyBeats(amountPositive)
-      b.copy(manualEntries = manualEntries.+:(me))
+      b.map(_.copy(manualEntries = manualEntries.+:(me)))
     }
 
   }
