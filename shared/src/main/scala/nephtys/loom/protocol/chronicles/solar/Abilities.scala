@@ -33,6 +33,9 @@ object Abilities {
       }
     })
 
+
+    def spentWithFreePoints: Int = Math.min(ratings.map(i => Math.min(3, i)).sum, 28)
+
     private val indicesMap : Map[Ability, Int] = abilities.zipWithIndex.toMap
     private val abilitiesMap : Map[String, Ability] = abilities.map(s => (s.name, s)).toMap
 

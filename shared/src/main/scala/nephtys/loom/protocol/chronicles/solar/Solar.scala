@@ -1,5 +1,6 @@
 package nephtys.loom.protocol.chronicles.solar
 
+import nephtys.loom.protocol.shared.CustomPowers.FreePointCost
 import nephtys.loom.protocol.shared.{CustomPowers, Power, Powers}
 import nephtys.loom.protocol.vanilla.solar.Abilities.Type
 import nephtys.loom.protocol.vanilla.solar.Equipments.Equipment
@@ -112,4 +113,9 @@ with CharmLearnable
   override def ignoreEssence(abilityName: String): Boolean = abilities.getTypeForAbility(abilityName).exists(a => a == nephtys.loom.protocol.vanilla.solar.Abilities.Supernal)
 
   override def selectableAbilities: Seq[String] = abilities.abilities.map(_.name)
+
+  override def countCharmPurchases: Int = listedPowers.size + customCharms.map(a => a.customCost match {
+    case FreePointCost(i) => i
+    case _ => 0
+  }).sum
 }

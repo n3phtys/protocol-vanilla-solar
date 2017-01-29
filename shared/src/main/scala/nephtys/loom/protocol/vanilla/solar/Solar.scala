@@ -113,6 +113,7 @@ with CharmLearnable{
 
 trait CharmLearnable extends Essencable with Abilitable with Attributable with Learnable {
   def customCharms : Seq[CustomPowers.CustomPower]
+  def countCharmPurchases: Int
 }
 
 trait Essencable {
