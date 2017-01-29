@@ -83,7 +83,7 @@ object Experiences {
     val pointsLeft : Int  = Beat.asPoints(beats.current)
     val beatsLeft : Int = beats.current - Point.asBeats(pointsLeft)
     val pointsTotal : Int = Beat.asPoints(beats.total)
-    val beatsTotal : Int = beats.total - pointsTotal
+    val beatsTotal : Int = beats.total - Point.asBeats(pointsTotal)
     val pointsSpent : Int = Beat.asPoints(beats.spent)
 
 
