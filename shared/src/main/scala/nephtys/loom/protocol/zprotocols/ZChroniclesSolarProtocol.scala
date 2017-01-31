@@ -3,7 +3,7 @@ package nephtys.loom.protocol.zprotocols
 import nephtys.loom.protocol.chronicles.solar.{CharacterFactory, Experiences, Solar}
 import nephtys.loom.protocol.shared.CustomPowers.CustomPower
 import nephtys.loom.protocol.vanilla.solar.Misc.Caste
-import nephtys.loom.protocol.vanilla.solar.{Exceptions, Intimacies}
+import nephtys.loom.protocol.vanilla.solar.{Attributes, Exceptions, Intimacies}
 import org.nephtys.loom.generic.protocol.EventInput.EventInput
 import org.nephtys.loom.generic.protocol.InternalStructures.{Email, EndpointRoot, FailableList, ID}
 import org.nephtys.loom.generic.protocol.{Backend, Protocol}
@@ -267,10 +267,10 @@ object ZChroniclesSolarProtocol extends Protocol[Solar] with Backend[Solar] {
   case class ESetAspiration(id : Id, index : Int, title : String) extends SolarEvent {
     override def commitInternal(input: EventInput): Solar = ???
   }
-  case class AddRemoveOrChangeMerit(id : Id, title : String, category : String, add : Option[Boolean], rating : Int) extends SolarCommand {
+  case class AddRemoveOrChangeMerit(id : Id, title : String, category : String, index : Int, add : Option[Boolean], rating : Int) extends SolarCommand {
     override protected def validateInternal(input: EventInput): Try[ZChroniclesSolarProtocol.Event] = ???
   }
-  case class EAddRemoveOrChangeMerit(id : Id, title : String, category : String, add : Option[Boolean], rating : Int) extends SolarEvent {
+  case class EAddRemoveOrChangeMerit(id : Id, title : String, category : String, index : Int, add : Option[Boolean], rating : Int) extends SolarEvent {
     override def commitInternal(input: EventInput): Solar = ???
   }
   case class AddNote(id : Id, str : String, index : Int ) extends SolarCommand {
@@ -311,6 +311,11 @@ object ZChroniclesSolarProtocol extends Protocol[Solar] with Backend[Solar] {
 
 
 
+  def diff(id : Id, from : Attributes.AttributeBlock, to : Attributes.AttributeBlock) : Seq[SolarCommand] = {
+    from.block.indices.filter(i => from.block(i).dots.number != to.block(i).dots.number).map(i => {
+      SetAttribute(id, i, to.block(i).dots.number)
+    })
+  }
 
 
 
